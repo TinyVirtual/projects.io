@@ -80,7 +80,7 @@ fischs.innerHTML = ""
 })
 
 document.addEventListener("keydown", function(e){
-if(e.key == "Tab"){
+if(e.key == "Tab"|| e.key == "Enter"){
 window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 }
 });
