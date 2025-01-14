@@ -51,7 +51,7 @@ isRare = true
 }
 
 if(capt){
-if(!isRare) {progVal += Math.round(Math.random() * 10)} else progVal += Math.round(Math.random() * 2)
+if(!isRare) {progVal += Math.round(Math.random() * 10)} else progVal += Math.round(Math.random() * 5)
 
 if(progVal >= 100){
 let li = document.createElement("li")
