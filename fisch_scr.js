@@ -1,5 +1,5 @@
-const allFishsCommon = ["Salmao","Atum","Peixe-Bolha","Peixe Gato","Salmonete","Peixe Sol","Peixe Lua","Peixe Terra","Peixe Ar","Peixe Fogo","Peixoto","Peixe Cavalo","Cavalo Marinho","Peixe Petroleo","Peixe Peixe","peixe Peixe PEIXE!","Peixe Bloco","Algum Peixe"]
-const allFishsRare = ["Lula Colossal","Bolsonaro Colossal","Tubarao Cabeça de Mamao","Tubarao Cabeça de Matelo","Baleia Azul","Baleia Verde","Baleia Vermelha","Baleia Mamae","Arraia","Pedaço do Titanic","Milhonario","Peixe Raro"]
+const allFishsCommon = ["Salmon","Tuna","Bubble Fish","Cat Fish","Dog Fish","Mouthbass","Moonfish","Mudfish","Flying Fish","Magma Fish","Fishy :D","Horse Fish","FisHorse","Oiled up fish","Fish Fish","fish Fish FISH!","Block Fish","Some fish lol"]
+const allFishsRare = ["Colossal Squid","Pufferfish","Femboy shark","Hammerhead shark","Diddy Shark","Mommy Shark","Baby Shark","Mommy Whale","Stingray","Titanic chunk","Millionaire","Rare fish"]
 
 
 let fischs = document.getElementById("galery")
@@ -34,7 +34,7 @@ if (r < 0.2 && r > 0.05){
 capt = allFishsCommon[Math.floor(Math.random() * allFishsCommon.length - 1)]
 button.style.left = 10
 button.style.top = 10
-button.innerHTML = "NA ISCA!!"
+button.innerHTML = "CATCHING!!"
 progress.innerHTML = progVal
 progVal = 40
 isRare = false
@@ -43,7 +43,7 @@ if(r < 0.05){
 capt = allFishsRare[Math.floor(Math.random() * allFishsCommon.length - 1)]
 button.style.left = 10
 button.style.top = 10
-button.innerHTML = "NA ISCA!!"
+button.innerHTML = "CATCHING!!"
 progress.innerHTML = progVal
 progVal = 25
 isRare = true
@@ -61,7 +61,7 @@ fischs.appendChild(li)
 capt = ""
 progVal = 0
 isRare = false
-button.innerHTML = "Pesque"
+button.innerHTML = "Fish"
 }
 
 }
