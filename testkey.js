@@ -3,11 +3,11 @@ let access
 
 function verifyAccess() {
     if(localStorage.getItem("keyValue") != key) {
-        access = prompt("Please enter key for early access below:")        
-        if (access != key) {
-            verifyAccess()
-        } else localStorage.setItem("keyValue", key);
-    }
+        access = prompt("Please enter key for early access below:")      
+    }  
+    if (access != key && typeof access == "string") {
+        verifyAccess()
+    } else localStorage.setItem("keyValue", key);
 }
 console.warn("The error below is not an error and is a security feature, just ignore cuz works as intended")
 
