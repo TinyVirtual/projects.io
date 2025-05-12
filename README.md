@@ -1,6 +1,6 @@
 # Pages
 
-[fisch game in html](https://vitorbiliato.github.io/fisch.html)
+[fisch game in html](https://tinyvirtual.github.io/projects.io/fisch.html)
 
 
-[storytelling](https://vitorbiliato.github.io/story.html)
+[storytelling](https://tinyvirtual.github.io/projects.io/story.html)
