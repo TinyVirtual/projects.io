@@ -1,62 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avatar Changer</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
 <body>
   <div class="container">
     <h1>Avatar Changer</h1>
-    <!-- The Canvas displays the composite avatar -->
+    <!-- Canvas displays the composite avatar -->
     <canvas id="spriteCanvas" width="200" height="200"></canvas>
-
-    <!-- Controls: one section per category -->
+    
+    <!-- Controls: Choose a category. If "Clothing" is selected, a sub‑category dropdown appears. -->
     <div class="controls">
-      <div>
-        <h3>Bases</h3>
-        <div class="thumbs-container" id="thumbs-bases"></div>
-      </div>
-      <div>
-        <h3>Hair</h3>
-        <div class="thumbs-container" id="thumbs-hair"></div>
-      </div>
-      <div>
-        <h3>Eyes</h3>
-        <div class="thumbs-container" id="thumbs-eyes"></div>
-      </div>
-      <div>
-        <h3>Mouths</h3>
-        <div class="thumbs-container" id="thumbs-mouths"></div>
-      </div>
-      <div>
-        <h3>Clothing - Top</h3>
-        <div class="thumbs-container" id="thumbs-clothing-top"></div>
-      </div>
-      <div>
-        <h3>Clothing - Bottom</h3>
-        <div class="thumbs-container" id="thumbs-clothing-bottom"></div>
-      </div>
-      <div>
-        <h3>Clothing - Hats</h3>
-        <div class="thumbs-container" id="thumbs-clothing-hats"></div>
-      </div>
-      <div>
-        <h3>Clothing - Gloves</h3>
-        <div class="thumbs-container" id="thumbs-clothing-gloves"></div>
-      </div>
-      <div>
-        <h3>Clothing - Shoes</h3>
-        <div class="thumbs-container" id="thumbs-clothing-shoes"></div>
-      </div>
-      <div>
-        <h3>Clothing - Eyewear</h3>
-        <div class="thumbs-container" id="thumbs-clothing-eyewear"></div>
-      </div>
+      <label for="sectionSelect">Category:</label>
+      <select id="sectionSelect">
+        <option value="Bases">Bases</option>
+        <option value="Clothing">Clothing</option>
+        <option value="Eyes">Eyes</option>
+        <option value="Hair">Hair</option>
+        <option value="Mouths">Mouths</option>
+      </select>
+      
+      <!-- Dropdown for Clothing sub-categories -->
+      <select id="clothingSubsection" style="display:none;">
+        <option value="Bottom">Bottom</option>
+        <option value="Eyewear">Eyewear</option>
+        <option value="Gloves">Gloves</option>
+        <option value="Hats">Hats</option>
+        <option value="Shoes">Shoes</option>
+        <option value="Top">Top</option>
+      </select>
     </div>
-
-    <!-- Global Color Sliders -->
+    
+    <!-- Thumbnails container for the active category -->
+    <div class="thumbs-container" id="spriteThumbsContainer"></div>
+    
+    <!-- Color sliders: these update only the active (selected) category -->
     <div class="slider-container">
       <div class="slider">
         <label for="hueSlider">Hue:</label>
@@ -75,8 +48,7 @@
       </div>
     </div>
   </div>
-  <br />
+  <br>
   <a>v 1.6.0</a>
   <script src="script.js"></script>
 </body>
-</html>
