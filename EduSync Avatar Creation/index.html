@@ -6,54 +6,32 @@
   <title>Avatar Changer</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      text-align: center;
-    }
-    canvas {
-      border: 1px solid #000;
-      margin-bottom: 20px;
-    }
-    .controls {
-      margin-bottom: 20px;
-    }
-    .thumbs-container {
+    /* Additional style for the remove option thumbnail */
+    .thumbs-container .remove-thumb {
+      width: 60px;
+      height: 60px;
       display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
+      align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
-    }
-    .thumbs-container img {
-      width: 50px;
-      height: 50px;
+      border: 2px solid #007bff;
       cursor: pointer;
-      border: 2px solid transparent;
+      background-color: #fff;
+      font-size: 12px;
+      font-weight: bold;
     }
-    .thumbs-container img.selected {
+    /* Optionally, add a "selected" style rule for non-img elements */
+    .thumbs-container .remove-thumb.selected {
       border-color: red;
-    }
-    .slider-container {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      align-items: center;
-    }
-    .slider {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Avatar Changer</h1>
-    <!-- Canvas displays the composite avatar -->
+    <!-- The canvas displays the composite avatar -->
     <canvas id="spriteCanvas" width="200" height="200"></canvas>
     
-    <!-- Controls: Choose a category. If "Clothing" is selected, a sub‑category dropdown appears. -->
+    <!-- Category selection; if "Clothing" is chosen, display the sub‑category dropdown -->
     <div class="controls">
       <label for="sectionSelect">Category:</label>
       <select id="sectionSelect">
@@ -64,7 +42,6 @@
         <option value="Mouths">Mouths</option>
       </select>
       
-      <!-- Dropdown for Clothing sub-categories -->
       <select id="clothingSubsection" style="display:none;">
         <option value="Bottom">Bottom</option>
         <option value="Eyewear">Eyewear</option>
@@ -75,10 +52,10 @@
       </select>
     </div>
     
-    <!-- Thumbnails container for the active category -->
+    <!-- Thumbnails container shows the available sprites for the active category -->
     <div class="thumbs-container" id="spriteThumbsContainer"></div>
     
-    <!-- Color sliders: these update only the active (selected) category -->
+    <!-- Color sliders for tinting the active category -->
     <div class="slider-container">
       <div class="slider">
         <label for="hueSlider">Hue:</label>
