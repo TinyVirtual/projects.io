@@ -1,15 +1,9 @@
-const VERSION = '1.5.5';
+const VERSION = '1.6.0';
 console.log(`script.js version ${VERSION}`);
 
 let spritesManifest = {};
-// Store the currently selected image for each layer.
-const currentImages = {
-  "Bases": null,
-  "Clothing": null,
-  "Eyes": null,
-  "Hair": null,
-  "Mouths": null
-};
+// Store the currently selected image for each category.
+const currentImages = {};
 
 // Get canvas and slider elements.
 const canvas = document.getElementById("spriteCanvas");
@@ -23,41 +17,39 @@ const hueValue = document.getElementById("hueValue");
 const satValue = document.getElementById("satValue");
 const valValue = document.getElementById("valValue");
 
-const clothingSubsection = document.getElementById("clothingSubsection");
-
-// Get thumbnail container elements for each layer.
-const thumbsBases = document.getElementById("thumbs-bases");
-const thumbsClothing = document.getElementById("thumbs-clothing");
-const thumbsEyes = document.getElementById("thumbs-eyes");
-const thumbsHair = document.getElementById("thumbs-hair");
-const thumbsMouths = document.getElementById("thumbs-mouths");
+const sectionSelect = document.getElementById("sectionSelect"); // category dropdown
+const thumbsContainer = document.getElementById("spriteThumbsContainer");
 
 /**
- * Save the selected sprite for a given layer to localStorage.
+ * Save the selected sprite for a given category to localStorage.
  */
-function saveSelectedSprite(layer, fileName) {
+function saveSelectedSprite(category, fileName) {
   let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
   if (!avatarData.selectedSprites) {
     avatarData.selectedSprites = {};
   }
-  avatarData.selectedSprites[layer] = fileName;
+  avatarData.selectedSprites[category] = fileName;
   localStorage.setItem("avatarData", JSON.stringify(avatarData));
 }
 
 /**
- * Get the saved sprite (file name) for a given layer from localStorage.
+ * Get the saved sprite for a given category.
  */
-function getSavedSpriteForLayer(layer) {
+function getSavedSpriteForCategory(category) {
   let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
-  return avatarData.selectedSprites ? avatarData.selectedSprites[layer] : null;
+  return avatarData.selectedSprites ? avatarData.selectedSprites[category] : null;
 }
 
 /**
- * Save the current slider (color) values into localStorage.
+ * Save the current slider values for the current category.
  */
 function saveAvatarColor() {
+  const category = sectionSelect.value;
   let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
-  avatarData.slider = {
+  if (!avatarData.slider) {
+    avatarData.slider = {};
+  }
+  avatarData.slider[category] = {
     hue: hueSlider.value,
     sat: satSlider.value,
     val: valSlider.value
@@ -66,39 +58,33 @@ function saveAvatarColor() {
 }
 
 /**
- * Save the current clothing subcategory selection to localStorage.
- */
-function saveClothingSubsection() {
-  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
-  avatarData.clothingSubsection = clothingSubsection.value;
-  localStorage.setItem("avatarData", JSON.stringify(avatarData));
-}
-
-/**
- * Load saved avatar data (slider values and clothing subcategory) from localStorage.
+ * Load saved slider values for the current category.
  */
 function loadAvatarData() {
+  const category = sectionSelect.value;
   let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
-  if (avatarData.slider) {
-    hueSlider.value = avatarData.slider.hue;
-    satSlider.value = avatarData.slider.sat;
-    valSlider.value = avatarData.slider.val;
-  }
-  if (avatarData.clothingSubsection && clothingSubsection) {
-    clothingSubsection.value = avatarData.clothingSubsection;
+  if (avatarData.slider && avatarData.slider[category]) {
+    hueSlider.value = avatarData.slider[category].hue;
+    satSlider.value = avatarData.slider[category].sat;
+    valSlider.value = avatarData.slider[category].val;
+  } else {
+    // Use default values if none saved.
+    hueSlider.value = 0;
+    satSlider.value = 100;
+    valSlider.value = 100;
   }
 }
 
 /**
- * Load an image for a given layer from the provided folder.
+ * Load an image for a given category from the provided folder.
  */
-function loadImage(layer, fileName, folderPath) {
+function loadImage(category, fileName, folderPath) {
   const img = new Image();
   img.src = folderPath + fileName;
   img.onload = function() {
-    currentImages[layer] = img;
-    saveSelectedSprite(layer, fileName);
+    currentImages[category] = img;
     drawComposite();
+    saveSelectedSprite(category, fileName);
   };
   img.onerror = function() {
     console.error("Error loading image", folderPath + fileName);
@@ -107,83 +93,70 @@ function loadImage(layer, fileName, folderPath) {
 }
 
 /**
- * Populate the thumbnail slider for the specified layer.
- * For Clothing, it uses the currently selected subcategory.
+ * Populate the thumbnail slider for the specified category.
  */
-function populateThumbnails(layer) {
-  let container, files = [], folderPath = "";
-  switch (layer) {
-    case "Bases":
-      container = thumbsBases;
-      files = spritesManifest["Bases"] || [];
-      folderPath = "sprites/Bases/";
-      break;
-    case "Clothing":
-      container = thumbsClothing;
-      const subcat = clothingSubsection ? clothingSubsection.value : "";
-      files = (spritesManifest["Clothing"] && spritesManifest["Clothing"][subcat]) || [];
-      folderPath = `sprites/Clothing/${subcat}/`;
-      break;
-    case "Eyes":
-      container = thumbsEyes;
-      files = spritesManifest["Eyes"] || [];
-      folderPath = "sprites/Eyes/";
-      break;
-    case "Hair":
-      container = thumbsHair;
-      files = spritesManifest["Hair"] || [];
-      folderPath = "sprites/Hair/";
-      break;
-    case "Mouths":
-      container = thumbsMouths;
-      files = spritesManifest["Mouths"] || [];
-      folderPath = "sprites/Mouths/";
-      break;
-    default:
-      break;
+function populateThumbnails(category) {
+  let files = [], folderPath = "";
+  
+  // Determine the data and folder path based on category.
+  if (category === "Bases") {
+    files = spritesManifest["Bases"] || [];
+    folderPath = "sprites/Bases/";
+  } else if (["Bottom", "Eyewear", "Gloves", "Hats", "Shoes", "Top"].includes(category)) {
+    files = (spritesManifest["Clothing"] && spritesManifest["Clothing"][category]) || [];
+    folderPath = `sprites/Clothing/${category}/`;
+  } else if (category === "Eyes") {
+    files = spritesManifest["Eyes"] || [];
+    folderPath = "sprites/Eyes/";
+  } else if (category === "Hair") {
+    files = spritesManifest["Hair"] || [];
+    folderPath = "sprites/Hair/";
+  } else if (category === "Mouths") {
+    files = spritesManifest["Mouths"] || [];
+    folderPath = "sprites/Mouths/";
   }
-
-  // If the container element doesn't exist, warn; otherwise clear its innerHTML.
-  if (!container) {
-    console.warn(`Container for layer ${layer} not found.`);
+  
+  // If the container element exists, clear its innerHTML; otherwise, log a warning.
+  if (!thumbsContainer) {
+    console.warn(`Thumbnails container not found.`);
   } else {
-    container.innerHTML = "";
+    thumbsContainer.innerHTML = "";
   }
-
-  // Create thumbnails for each file.
+  
+  // Create a thumbnail for each file.
   files.forEach(file => {
-    if (!container) return; // Skip if container is missing
+    if (!thumbsContainer) return;
     const imgThumb = document.createElement("img");
     imgThumb.src = folderPath + file;
     imgThumb.alt = file;
     imgThumb.addEventListener("click", () => {
-      // Remove 'selected' class from all images in the container.
-      container.querySelectorAll("img").forEach(img => img.classList.remove("selected"));
+      // Remove 'selected' from all thumbnail images.
+      thumbsContainer.querySelectorAll("img").forEach(img => img.classList.remove("selected"));
       imgThumb.classList.add("selected");
-      loadImage(layer, file, folderPath);
+      loadImage(category, file, folderPath);
     });
-    container.appendChild(imgThumb);
+    thumbsContainer.appendChild(imgThumb);
   });
-
-  // Auto-select the saved sprite if it exists and is valid; otherwise, select the first thumbnail.
-  if (container && files.length > 0) {
-    const saved = getSavedSpriteForLayer(layer);
+  
+  // Auto-select the saved sprite if available; otherwise, select the first thumbnail.
+  if (thumbsContainer && files.length > 0) {
+    let saved = getSavedSpriteForCategory(category);
     let thumb;
     if (saved && files.includes(saved)) {
-      thumb = container.querySelector(`img[alt="${saved}"]`);
+      thumb = thumbsContainer.querySelector(`img[alt="${saved}"]`);
     }
     if (!thumb) {
-      thumb = container.querySelector("img");
+      thumb = thumbsContainer.querySelector("img");
     }
     if (thumb) {
       thumb.classList.add("selected");
-      loadImage(layer, thumb.alt, folderPath);
+      loadImage(category, thumb.alt, folderPath);
     }
   }
 }
 
 /**
- * Converts HSV (with h in [0,360] and s, v in [0,1]) to an RGB object.
+ * Converts HSV (h in [0,360], s & v in [0,1]) to an RGB object.
  */
 function hsvToRgb(h, s, v) {
   let c = v * s;
@@ -212,7 +185,7 @@ function hsvToRgb(h, s, v) {
 
 /**
  * Create an offscreen canvas containing the tinted version of an image.
- * The tint is applied with a multiply composite so that shading is preserved.
+ * (Using 'multiply' so shading is preserved.)
  */
 function getTintedCanvas(image, width, height, tintColor) {
   const off = document.createElement("canvas");
@@ -225,59 +198,50 @@ function getTintedCanvas(image, width, height, tintColor) {
   offCtx.fillRect(0, 0, width, height);
   offCtx.globalCompositeOperation = "destination-in";
   offCtx.drawImage(image, 0, 0, width, height);
-  offCtx.globalCompositeOperation = "source-over"; // Reset composite
+  offCtx.globalCompositeOperation = "source-over";
   return off;
 }
 
 /**
- * Draw all layers (Bases, Clothing, Eyes, Hair, Mouths) onto the main canvas.
+ * Draw the tinted image for the currently selected category only.
+ * (The canvas shows only the sprite for the active category.)
  */
 function drawComposite() {
-  // Update slider display values.
+  const category = sectionSelect.value;
+  
+  // Update slider display.
   const hue = parseInt(hueSlider.value, 10);
   const sat = parseFloat(satSlider.value) / 100;
   const val = parseFloat(valSlider.value) / 100;
   hueValue.textContent = hue;
   satValue.textContent = satSlider.value;
   valValue.textContent = valSlider.value;
-
+  
   const rgb = hsvToRgb(hue, sat, val);
   const tintColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-
-  // Clear the main canvas.
+  
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw layers in order: Bases, Clothing, Eyes, Hair, Mouths.
-  const layers = ["Bases", "Clothing", "Eyes", "Hair", "Mouths"];
-  layers.forEach(layer => {
-    const img = currentImages[layer];
-    if (img && img.complete && img.naturalWidth !== 0) {
-      const tinted = getTintedCanvas(img, canvas.width, canvas.height, tintColor);
-      ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
-    }
-  });
+  
+  const img = currentImages[category];
+  if (img && img.complete && img.naturalWidth !== 0) {
+    const tinted = getTintedCanvas(img, canvas.width, canvas.height, tintColor);
+    ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
+  }
 }
 
 /**
- * Initialize the UI and populate thumbnails for all layers.
+ * Initialize the UI: attach event listeners, load saved color data,
+ * populate thumbnails, and load the active category.
  */
 function init() {
-  // Load any saved slider values and clothing subcategory.
-  loadAvatarData();
-
-  populateThumbnails("Bases");
-  populateThumbnails("Clothing");
-  populateThumbnails("Eyes");
-  populateThumbnails("Hair");
-  populateThumbnails("Mouths");
-
-  if (clothingSubsection) {
-    clothingSubsection.addEventListener("change", () => {
-      saveClothingSubsection();
-      populateThumbnails("Clothing");
-    });
-  }
-
+  // When the category changes, load its saved slider color, refresh thumbnails, and update the canvas.
+  sectionSelect.addEventListener("change", () => {
+    loadAvatarData();
+    populateThumbnails(sectionSelect.value);
+    drawComposite();
+  });
+  
+  // When a slider moves, update the canvas and save the new color values.
   hueSlider.addEventListener("input", () => {
     drawComposite();
     saveAvatarColor();
@@ -290,9 +254,14 @@ function init() {
     drawComposite();
     saveAvatarColor();
   });
+  
+  // For the initial load, set the saved slider values and load thumbnails for the current category.
+  loadAvatarData();
+  populateThumbnails(sectionSelect.value);
+  drawComposite();
 }
 
-// Fetch the sprites manifest and initialize the UI.
+// Fetch the sprites manifest and initialize.
 fetch("sprites.json")
   .then(response => response.json())
   .then(data => {
