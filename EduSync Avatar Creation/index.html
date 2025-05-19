@@ -9,67 +9,74 @@
 <body>
   <div class="container">
     <h1>Avatar Changer</h1>
-    <!-- Canvas -->
+    <!-- The Canvas displays the composite avatar -->
     <canvas id="spriteCanvas" width="200" height="200"></canvas>
 
-    <!-- Selected Category Info -->
-    <div id="selectedInfo">
-      Selected: <span id="selectedSection"></span>
-      <span id="selectedSubsection"></span>
-    </div>
-
-    <!-- Category & (optional) Subcategory Dropdowns -->
+    <!-- Controls: one section per category -->
     <div class="controls">
-      <label for="sectionSelect">Category:</label>
-      <select id="sectionSelect">
-        <option value="Bases">Bases</option>
-        <option value="Clothing">Clothing</option>
-        <option value="Eyes">Eyes</option>
-        <option value="Mouths">Mouths</option>
-      </select>
-
-      <!-- This dropdown only appears when Clothing is selected -->
-      <select id="clothingSubsection" style="display:none;">
-        <option value="Bottom">Bottom</option>
-        <option value="Eyewear">Eyewear</option>
-        <option value="Gloves">Gloves</option>
-        <option value="Hats">Hats</option>
-        <option value="Shoes">Shoes</option>
-        <option value="Top">Top</option>
-      </select>
+      <div>
+        <h3>Bases</h3>
+        <div class="thumbs-container" id="thumbs-bases"></div>
+      </div>
+      <div>
+        <h3>Hair</h3>
+        <div class="thumbs-container" id="thumbs-hair"></div>
+      </div>
+      <div>
+        <h3>Eyes</h3>
+        <div class="thumbs-container" id="thumbs-eyes"></div>
+      </div>
+      <div>
+        <h3>Mouths</h3>
+        <div class="thumbs-container" id="thumbs-mouths"></div>
+      </div>
+      <div>
+        <h3>Clothing - Top</h3>
+        <div class="thumbs-container" id="thumbs-clothing-top"></div>
+      </div>
+      <div>
+        <h3>Clothing - Bottom</h3>
+        <div class="thumbs-container" id="thumbs-clothing-bottom"></div>
+      </div>
+      <div>
+        <h3>Clothing - Hats</h3>
+        <div class="thumbs-container" id="thumbs-clothing-hats"></div>
+      </div>
+      <div>
+        <h3>Clothing - Gloves</h3>
+        <div class="thumbs-container" id="thumbs-clothing-gloves"></div>
+      </div>
+      <div>
+        <h3>Clothing - Shoes</h3>
+        <div class="thumbs-container" id="thumbs-clothing-shoes"></div>
+      </div>
+      <div>
+        <h3>Clothing - Eyewear</h3>
+        <div class="thumbs-container" id="thumbs-clothing-eyewear"></div>
+      </div>
     </div>
-    
-    <div class="thumbs-container" id="thumbs-bases"></div>
-    <div class="thumbs-container" id="thumbs-clothing"></div>
-    <div class="thumbs-container" id="thumbs-eyes"></div>
-    <div class="thumbs-container" id="thumbs-hair"></div>
-    <div class="thumbs-container" id="thumbs-mouths"></div>
 
-
-    <!-- Sprite Thumbnails Slider -->
-    <div id="spriteThumbsContainer" class="thumbs-container"></div>
-
-    <!-- Color Sliders -->
+    <!-- Global Color Sliders -->
     <div class="slider-container">
       <div class="slider">
         <label for="hueSlider">Hue:</label>
-        <input type="range" id="hueSlider" min="0" max="360" value="0">
+        <input type="range" id="hueSlider" min="0" max="360" value="0" />
         <span id="hueValue">0</span>°
       </div>
       <div class="slider">
         <label for="satSlider">Saturation:</label>
-        <input type="range" id="satSlider" min="0" max="100" value="100">
+        <input type="range" id="satSlider" min="0" max="100" value="100" />
         <span id="satValue">100</span>%
       </div>
       <div class="slider">
         <label for="valSlider">Value:</label>
-        <input type="range" id="valSlider" min="0" max="100" value="100">
+        <input type="range" id="valSlider" min="0" max="100" value="100" />
         <span id="valValue">100</span>%
       </div>
     </div>
   </div>
-  <br>
-<a>v 1.5.4</a>
+  <br />
+  <a>v 1.6.0</a>
   <script src="script.js"></script>
 </body>
 </html>
