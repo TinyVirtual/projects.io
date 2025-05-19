@@ -104,3 +104,22 @@ input[type="range"]::-webkit-slider-thumb {
   gap: 10px;
   color: #ffffff;
 }
+
+.thumbs-container .remove-thumb {
+      width: 60px;
+      height: 60px;
+      color: #fff;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #007bff;
+      cursor: pointer;
+      background-color: #001;
+      font-size: 12px;
+      font-weight: bold;
+}
+ .thumbs-container .remove-thumb.selected {
+      background-color: #100;
+      border-color: #f00;
+    }
