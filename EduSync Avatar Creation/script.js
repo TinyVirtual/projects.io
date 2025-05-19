@@ -1,6 +1,6 @@
-const VERSION = '1.5.4';
+const VERSION = '1.5.5';
 console.log(`script.js version ${VERSION}`);
- 
+
 let spritesManifest = {};
 // Store the currently selected image for each layer.
 const currentImages = {
@@ -33,6 +33,63 @@ const thumbsHair = document.getElementById("thumbs-hair");
 const thumbsMouths = document.getElementById("thumbs-mouths");
 
 /**
+ * Save the selected sprite for a given layer to localStorage.
+ */
+function saveSelectedSprite(layer, fileName) {
+  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+  if (!avatarData.selectedSprites) {
+    avatarData.selectedSprites = {};
+  }
+  avatarData.selectedSprites[layer] = fileName;
+  localStorage.setItem("avatarData", JSON.stringify(avatarData));
+}
+
+/**
+ * Get the saved sprite (file name) for a given layer from localStorage.
+ */
+function getSavedSpriteForLayer(layer) {
+  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+  return avatarData.selectedSprites ? avatarData.selectedSprites[layer] : null;
+}
+
+/**
+ * Save the current slider (color) values into localStorage.
+ */
+function saveAvatarColor() {
+  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+  avatarData.slider = {
+    hue: hueSlider.value,
+    sat: satSlider.value,
+    val: valSlider.value
+  };
+  localStorage.setItem("avatarData", JSON.stringify(avatarData));
+}
+
+/**
+ * Save the current clothing subcategory selection to localStorage.
+ */
+function saveClothingSubsection() {
+  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+  avatarData.clothingSubsection = clothingSubsection.value;
+  localStorage.setItem("avatarData", JSON.stringify(avatarData));
+}
+
+/**
+ * Load saved avatar data (slider values and clothing subcategory) from localStorage.
+ */
+function loadAvatarData() {
+  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+  if (avatarData.slider) {
+    hueSlider.value = avatarData.slider.hue;
+    satSlider.value = avatarData.slider.sat;
+    valSlider.value = avatarData.slider.val;
+  }
+  if (avatarData.clothingSubsection && clothingSubsection) {
+    clothingSubsection.value = avatarData.clothingSubsection;
+  }
+}
+
+/**
  * Load an image for a given layer from the provided folder.
  */
 function loadImage(layer, fileName, folderPath) {
@@ -40,6 +97,7 @@ function loadImage(layer, fileName, folderPath) {
   img.src = folderPath + fileName;
   img.onload = function() {
     currentImages[layer] = img;
+    saveSelectedSprite(layer, fileName);
     drawComposite();
   };
   img.onerror = function() {
@@ -85,16 +143,16 @@ function populateThumbnails(layer) {
       break;
   }
 
-  // If the container element doesn't exist, warn and skip.
+  // If the container element doesn't exist, warn; otherwise clear its innerHTML.
   if (!container) {
-    console.warn(`Container for layer ${layer} not found. Skipping thumbnail population.`);
+    console.warn(`Container for layer ${layer} not found.`);
   } else {
     container.innerHTML = "";
   }
 
-  // Clear previous thumbnails.
-
+  // Create thumbnails for each file.
   files.forEach(file => {
+    if (!container) return; // Skip if container is missing
     const imgThumb = document.createElement("img");
     imgThumb.src = folderPath + file;
     imgThumb.alt = file;
@@ -107,12 +165,19 @@ function populateThumbnails(layer) {
     container.appendChild(imgThumb);
   });
 
-  // Auto-select the first thumbnail if available.
-  if (files.length > 0) {
-    const firstThumb = container.querySelector("img");
-    if (firstThumb) {
-      firstThumb.classList.add("selected");
-      loadImage(layer, files[0], folderPath);
+  // Auto-select the saved sprite if it exists and is valid; otherwise, select the first thumbnail.
+  if (container && files.length > 0) {
+    const saved = getSavedSpriteForLayer(layer);
+    let thumb;
+    if (saved && files.includes(saved)) {
+      thumb = container.querySelector(`img[alt="${saved}"]`);
+    }
+    if (!thumb) {
+      thumb = container.querySelector("img");
+    }
+    if (thumb) {
+      thumb.classList.add("selected");
+      loadImage(layer, thumb.alt, folderPath);
     }
   }
 }
@@ -197,6 +262,9 @@ function drawComposite() {
  * Initialize the UI and populate thumbnails for all layers.
  */
 function init() {
+  // Load any saved slider values and clothing subcategory.
+  loadAvatarData();
+
   populateThumbnails("Bases");
   populateThumbnails("Clothing");
   populateThumbnails("Eyes");
@@ -205,13 +273,23 @@ function init() {
 
   if (clothingSubsection) {
     clothingSubsection.addEventListener("change", () => {
+      saveClothingSubsection();
       populateThumbnails("Clothing");
     });
   }
 
-  hueSlider.addEventListener("input", drawComposite);
-  satSlider.addEventListener("input", drawComposite);
-  valSlider.addEventListener("input", drawComposite);
+  hueSlider.addEventListener("input", () => {
+    drawComposite();
+    saveAvatarColor();
+  });
+  satSlider.addEventListener("input", () => {
+    drawComposite();
+    saveAvatarColor();
+  });
+  valSlider.addEventListener("input", () => {
+    drawComposite();
+    saveAvatarColor();
+  });
 }
 
 // Fetch the sprites manifest and initialize the UI.
