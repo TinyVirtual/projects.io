@@ -1,5 +1,6 @@
 const VERSION = '1.6.2';
 console.log(`script.js version ${VERSION}`);
+const defaultAvatar = '{"selectedSprites":{"Bases":"human.png","Eyes":"eyes1.png","Mouths":"mouth3.png","Hair":"hair1.png","Bottom":"pants3.png","Top":"shirt4.png","Shoes":"shoes2.png"},"slider":{"Bases":{"hue":"31","sat":"33","val":"100"},"Eyes":{"hue":"0","sat":"0","val":"0"},"Mouths":{"hue":"0","sat":"23","val":"30"},"Hair":{"hue":"31","sat":"70","val":"44"},"Bottom":{"hue":"192","sat":"100","val":"61"},"Top":{"hue":"179","sat":"7","val":"82"},"Shoes":{"hue":"208","sat":"18","val":"38"}}}'
 
 let spritesManifest = {};
 // Stores the currently selected image for each layer.
@@ -33,7 +34,7 @@ function getActiveCategory() {
  * Save the selected sprite for a given category to localStorage.
  */
 function saveSelectedSprite(category, fileName) {
-  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+  let avatarData = JSON.parse(localStorage.getItem("avatarData") || defaultAvatar);
   if (!avatarData.selectedSprites) {
     avatarData.selectedSprites = {};
   }
@@ -45,7 +46,7 @@ function saveSelectedSprite(category, fileName) {
  * Retrieve the saved sprite for a given category.
  */
 function getSavedSpriteForCategory(category) {
-  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+  let avatarData = JSON.parse(localStorage.getItem("avatarData") || defaultAvatar);
   return avatarData.selectedSprites ? avatarData.selectedSprites[category] : null;
 }
 
@@ -54,7 +55,7 @@ function getSavedSpriteForCategory(category) {
  */
 function saveAvatarColor() {
   const activeCategory = getActiveCategory();
-  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+  let avatarData = JSON.parse(localStorage.getItem("avatarData") || defaultAvatar);
   if (!avatarData.slider) {
     avatarData.slider = {};
   }
@@ -71,7 +72,7 @@ function saveAvatarColor() {
  */
 function loadAvatarData() {
   const activeCategory = getActiveCategory();
-  let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+  let avatarData = JSON.parse(localStorage.getItem("avatarData") || defaultAvatar);
   if (avatarData.slider && avatarData.slider[activeCategory]) {
     hueSlider.value = avatarData.slider[activeCategory].hue;
     satSlider.value = avatarData.slider[activeCategory].sat;
