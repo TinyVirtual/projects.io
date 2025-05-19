@@ -1,4 +1,4 @@
-const VERSION = '1.6.1';
+const VERSION = '1.6.2';
 console.log(`script.js version ${VERSION}`);
 
 let spritesManifest = {};
@@ -85,8 +85,20 @@ function loadAvatarData() {
 }
 
 /**
+ * Helper: Returns the folder path for a given category.
+ */
+function getFolderPath(category) {
+  if (["Bases", "Eyes", "Hair", "Mouths"].includes(category)) {
+    return `sprites/${category}/`;
+  } else if (["Bottom", "Eyewear", "Gloves", "Hats", "Shoes", "Top"].includes(category)) {
+    return `sprites/Clothing/${category}/`;
+  }
+  return "";
+}
+
+/**
  * Load an image for the given category key (e.g. "Bases", "Top", "Hair")
- * from the provided folder.
+ * from its folder.
  */
 function loadImage(categoryKey, fileName, folderPath) {
   const img = new Image();
@@ -216,7 +228,7 @@ function hsvToRgb(h, s, v) {
 
 /**
  * Create an offscreen canvas with the tinted version of an image.
- * Using the "multiply" operation preserves shading.
+ * Using "multiply" preserves the image’s shading.
  */
 function getTintedCanvas(image, width, height, tintColor) {
   const off = document.createElement("canvas");
@@ -235,9 +247,9 @@ function getTintedCanvas(image, width, height, tintColor) {
 
 /**
  * Draw the composite avatar.
- * Every layer in the defined layering order is drawn (if an image is selected).
- * For each layer, if slider values have been saved it is tinted accordingly.
- * The active category is tinted using the current UI slider values.
+ * Every layer in the defined layering order is drawn if an image is available.
+ * For each layer, if slider values have been saved they are applied via tinting.
+ * The active category uses the current UI slider values.
  */
 function drawComposite() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -261,7 +273,7 @@ function drawComposite() {
   layeringOrder.forEach(layer => {
     const img = currentImages[layer];
     if (img && img.complete && img.naturalWidth !== 0) {
-      // Use current UI slider values if layer is active; otherwise look up saved values.
+      // Use current UI slider values if layer is active; otherwise, use saved values or defaults.
       let sliderSettings;
       if (layer === activeCategory) {
         sliderSettings = {
@@ -283,7 +295,7 @@ function drawComposite() {
       const rgb = hsvToRgb(hue, sat, val);
       const tintColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
       
-      // Draw the layer using the tinted canvas.
+      // Draw the layer using a tinted canvas.
       const tinted = getTintedCanvas(img, canvas.width, canvas.height, tintColor);
       ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
     }
@@ -291,11 +303,27 @@ function drawComposite() {
 }
 
 /**
+ * Load all layers (across the layering order) from saved storage.
+ * For each category with a saved sprite, load it so that it appears in the composite.
+ */
+function loadAllLayersFromStorage() {
+  const allCategories = ["Bases", "Bottom", "Top", "Hair", "Eyes", "Mouths", "Hats", "Eyewear", "Gloves", "Shoes"];
+  
+  allCategories.forEach(category => {
+    const saved = getSavedSpriteForCategory(category);
+    if (saved) {
+      const folderPath = getFolderPath(category);
+      loadImage(category, saved, folderPath);
+    }
+  });
+}
+
+/**
  * Initialize the UI: attach event listeners, load saved settings,
- * update thumbnail choices, and draw the composite.
+ * update the active category’s thumbnails, and load all saved layers.
  */
 function init() {
-  // Show or hide the clothing sub‑dropdown when the category changes.
+  // When the category changes, show/hide the clothing sub-dropdown.
   sectionSelect.addEventListener("change", () => {
     clothingSubsection.style.display = sectionSelect.value === "Clothing" ? "inline" : "none";
     loadAvatarData();
@@ -303,7 +331,7 @@ function init() {
     drawComposite();
   });
   
-  // When the clothing sub‑category changes.
+  // When the clothing sub-category changes.
   clothingSubsection.addEventListener("change", () => {
     loadAvatarData();
     populateThumbnails(getActiveCategory());
@@ -324,13 +352,18 @@ function init() {
     saveAvatarColor();
   });
   
-  // On initial load, load stored slider values and populate thumbnails.
+  // Load the active category's saved slider values and thumbnails.
   loadAvatarData();
   populateThumbnails(getActiveCategory());
+  
+  // Load all saved layers from storage so every layer is drawn on load.
+  loadAllLayersFromStorage();
+  
+  // Draw composite initially.
   drawComposite();
 }
 
-// Load the sprites manifest JSON and initialize once loaded.
+// Fetch the sprites manifest and then initialize.
 fetch("sprites.json")
   .then(response => response.json())
   .then(data => {
