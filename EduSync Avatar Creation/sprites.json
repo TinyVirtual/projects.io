@@ -4,10 +4,11 @@
     "Bottom": ["pants1.png", "pants2.png", "pants3.png"],
     "Eyewear": ["eyewear1.png", "eyewear2.png"],
     "Gloves": ["glove1.png"],
-    "Hats": ["hats1.png", "hats2.png"],
+    "Hats": ["phat1.png", "tophat1.png"],
     "Shoes": ["shoes1.png", "shoes2.png"],
     "Top": ["shirt1.png", "shirt2.png", "shirt3.png", "shirt4.png", "shirt5.png"]
   },
   "Eyes": ["eyes1.png", "eyes2.png", "eyes3.png"],
+  "Hair": ["hair1.png", "hair2.png"],
   "Mouths": ["mouth1.png", "mouth2.png", "mouth3.png"]
 }
