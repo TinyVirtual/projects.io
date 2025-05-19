@@ -1,8 +1,10 @@
 const VERSION = '1.6.0';
 console.log(`script.js version ${VERSION}`);
 
+// Global sprites manifest from the JSON file.
 let spritesManifest = {};
-// Store the currently selected image for each category.
+
+// Store the current image for each category.
 const currentImages = {};
 
 // Get canvas and slider elements.
@@ -16,9 +18,6 @@ const valSlider = document.getElementById("valSlider");
 const hueValue = document.getElementById("hueValue");
 const satValue = document.getElementById("satValue");
 const valValue = document.getElementById("valValue");
-
-const sectionSelect = document.getElementById("sectionSelect"); // category dropdown
-const thumbsContainer = document.getElementById("spriteThumbsContainer");
 
 /**
  * Save the selected sprite for a given category to localStorage.
@@ -41,15 +40,11 @@ function getSavedSpriteForCategory(category) {
 }
 
 /**
- * Save the current slider values for the current category.
+ * Save and load global color settings.
  */
-function saveAvatarColor() {
-  const category = sectionSelect.value;
+function saveGlobalAvatarColor() {
   let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
-  if (!avatarData.slider) {
-    avatarData.slider = {};
-  }
-  avatarData.slider[category] = {
+  avatarData.globalColor = {
     hue: hueSlider.value,
     sat: satSlider.value,
     val: valSlider.value
@@ -57,18 +52,13 @@ function saveAvatarColor() {
   localStorage.setItem("avatarData", JSON.stringify(avatarData));
 }
 
-/**
- * Load saved slider values for the current category.
- */
-function loadAvatarData() {
-  const category = sectionSelect.value;
+function loadGlobalAvatarColor() {
   let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
-  if (avatarData.slider && avatarData.slider[category]) {
-    hueSlider.value = avatarData.slider[category].hue;
-    satSlider.value = avatarData.slider[category].sat;
-    valSlider.value = avatarData.slider[category].val;
+  if (avatarData.globalColor) {
+    hueSlider.value = avatarData.globalColor.hue;
+    satSlider.value = avatarData.globalColor.sat;
+    valSlider.value = avatarData.globalColor.val;
   } else {
-    // Use default values if none saved.
     hueSlider.value = 0;
     satSlider.value = 100;
     valSlider.value = 100;
@@ -81,72 +71,68 @@ function loadAvatarData() {
 function loadImage(category, fileName, folderPath) {
   const img = new Image();
   img.src = folderPath + fileName;
-  img.onload = function() {
+  img.onload = function () {
     currentImages[category] = img;
     drawComposite();
     saveSelectedSprite(category, fileName);
   };
-  img.onerror = function() {
+  img.onerror = function () {
     console.error("Error loading image", folderPath + fileName);
   };
   return img;
 }
 
 /**
- * Populate the thumbnail slider for the specified category.
+ * Populate thumbnails for a given category into the specified container.
  */
-function populateThumbnails(category) {
-  let files = [], folderPath = "";
-  
-  // Determine the data and folder path based on category.
+function populateThumbnailsForCategory(category, container) {
+  let files = [];
+  let folderPath = "";
+
+  // Determine the files and folder based on category.
   if (category === "Bases") {
     files = spritesManifest["Bases"] || [];
     folderPath = "sprites/Bases/";
-  } else if (["Bottom", "Eyewear", "Gloves", "Hats", "Shoes", "Top"].includes(category)) {
-    files = (spritesManifest["Clothing"] && spritesManifest["Clothing"][category]) || [];
-    folderPath = `sprites/Clothing/${category}/`;
-  } else if (category === "Eyes") {
-    files = spritesManifest["Eyes"] || [];
-    folderPath = "sprites/Eyes/";
   } else if (category === "Hair") {
     files = spritesManifest["Hair"] || [];
     folderPath = "sprites/Hair/";
+  } else if (category === "Eyes") {
+    files = spritesManifest["Eyes"] || [];
+    folderPath = "sprites/Eyes/";
   } else if (category === "Mouths") {
     files = spritesManifest["Mouths"] || [];
     folderPath = "sprites/Mouths/";
+  } else if (["Top", "Bottom", "Eyewear", "Gloves", "Hats", "Shoes"].includes(category)) {
+    files = (spritesManifest["Clothing"] && spritesManifest["Clothing"][category]) || [];
+    folderPath = `sprites/Clothing/${category}/`;
   }
-  
-  // If the container element exists, clear its innerHTML; otherwise, log a warning.
-  if (!thumbsContainer) {
-    console.warn(`Thumbnails container not found.`);
-  } else {
-    thumbsContainer.innerHTML = "";
-  }
-  
+
+  // Clear out any previous thumbnails.
+  container.innerHTML = "";
+
   // Create a thumbnail for each file.
   files.forEach(file => {
-    if (!thumbsContainer) return;
     const imgThumb = document.createElement("img");
     imgThumb.src = folderPath + file;
     imgThumb.alt = file;
     imgThumb.addEventListener("click", () => {
-      // Remove 'selected' from all thumbnail images.
-      thumbsContainer.querySelectorAll("img").forEach(img => img.classList.remove("selected"));
+      // Remove 'selected' from all images in this container.
+      container.querySelectorAll("img").forEach(img => img.classList.remove("selected"));
       imgThumb.classList.add("selected");
       loadImage(category, file, folderPath);
     });
-    thumbsContainer.appendChild(imgThumb);
+    container.appendChild(imgThumb);
   });
-  
-  // Auto-select the saved sprite if available; otherwise, select the first thumbnail.
-  if (thumbsContainer && files.length > 0) {
+
+  // Auto-select a saved sprite (or the first one) if available.
+  if (files.length > 0) {
     let saved = getSavedSpriteForCategory(category);
     let thumb;
     if (saved && files.includes(saved)) {
-      thumb = thumbsContainer.querySelector(`img[alt="${saved}"]`);
+      thumb = container.querySelector(`img[alt="${saved}"]`);
     }
     if (!thumb) {
-      thumb = thumbsContainer.querySelector("img");
+      thumb = container.querySelector("img");
     }
     if (thumb) {
       thumb.classList.add("selected");
@@ -164,17 +150,29 @@ function hsvToRgb(h, s, v) {
   let m = v - c;
   let r, g, b;
   if (h < 60) {
-    r = c; g = x; b = 0;
+    r = c;
+    g = x;
+    b = 0;
   } else if (h < 120) {
-    r = x; g = c; b = 0;
+    r = x;
+    g = c;
+    b = 0;
   } else if (h < 180) {
-    r = 0; g = c; b = x;
+    r = 0;
+    g = c;
+    b = x;
   } else if (h < 240) {
-    r = 0; g = x; b = c;
+    r = 0;
+    g = x;
+    b = c;
   } else if (h < 300) {
-    r = x; g = 0; b = c;
+    r = x;
+    g = 0;
+    b = c;
   } else {
-    r = c; g = 0; b = x;
+    r = c;
+    g = 0;
+    b = x;
   }
   return {
     r: Math.round((r + m) * 255),
@@ -203,65 +201,85 @@ function getTintedCanvas(image, width, height, tintColor) {
 }
 
 /**
- * Draw the tinted image for the currently selected category only.
- * (The canvas shows only the sprite for the active category.)
+ * Draw the composite avatar by layering every category.
+ * You can adjust the layering order as needed.
  */
 function drawComposite() {
-  const category = sectionSelect.value;
-  
-  // Update slider display.
+  // Use global slider values.
   const hue = parseInt(hueSlider.value, 10);
   const sat = parseFloat(satSlider.value) / 100;
   const val = parseFloat(valSlider.value) / 100;
   hueValue.textContent = hue;
   satValue.textContent = satSlider.value;
   valValue.textContent = valSlider.value;
-  
+
   const rgb = hsvToRgb(hue, sat, val);
   const tintColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-  
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  const img = currentImages[category];
-  if (img && img.complete && img.naturalWidth !== 0) {
-    const tinted = getTintedCanvas(img, canvas.width, canvas.height, tintColor);
-    ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
-  }
+
+  // Define a layering order. (Adjust the order as fits your design.)
+  const layeringOrder = [
+    "Bases",
+    "Bottom",         // clothing bottoms
+    "Top",            // clothing tops
+    "Hair",
+    "Eyes",
+    "Mouths",
+    "Hats",
+    "Eyewear",
+    "Gloves",
+    "Shoes"
+  ];
+
+  layeringOrder.forEach(category => {
+    const img = currentImages[category];
+    if (img && img.complete && img.naturalWidth !== 0) {
+      const tinted = getTintedCanvas(img, canvas.width, canvas.height, tintColor);
+      ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
+    }
+  });
 }
 
 /**
- * Initialize the UI: attach event listeners, load saved color data,
- * populate thumbnails, and load the active category.
+ * Initialize the UI: load global color settings, populate all category thumbnails,
+ * and attach slider event listeners.
  */
 function init() {
-  // When the category changes, load its saved slider color, refresh thumbnails, and update the canvas.
-  sectionSelect.addEventListener("change", () => {
-    loadAvatarData();
-    populateThumbnails(sectionSelect.value);
-    drawComposite();
-  });
-  
-  // When a slider moves, update the canvas and save the new color values.
+  loadGlobalAvatarColor();
+
+  // Populate thumbnails for each category using their respective containers.
+  populateThumbnailsForCategory("Bases", document.getElementById("thumbs-bases"));
+  populateThumbnailsForCategory("Hair", document.getElementById("thumbs-hair"));
+  populateThumbnailsForCategory("Eyes", document.getElementById("thumbs-eyes"));
+  populateThumbnailsForCategory("Mouths", document.getElementById("thumbs-mouths"));
+
+  // Clothing sub-categories:
+  populateThumbnailsForCategory("Top", document.getElementById("thumbs-clothing-top"));
+  populateThumbnailsForCategory("Bottom", document.getElementById("thumbs-clothing-bottom"));
+  populateThumbnailsForCategory("Hats", document.getElementById("thumbs-clothing-hats"));
+  populateThumbnailsForCategory("Gloves", document.getElementById("thumbs-clothing-gloves"));
+  populateThumbnailsForCategory("Shoes", document.getElementById("thumbs-clothing-shoes"));
+  populateThumbnailsForCategory("Eyewear", document.getElementById("thumbs-clothing-eyewear"));
+
+  // Update composite as slider values change.
   hueSlider.addEventListener("input", () => {
     drawComposite();
-    saveAvatarColor();
+    saveGlobalAvatarColor();
   });
   satSlider.addEventListener("input", () => {
     drawComposite();
-    saveAvatarColor();
+    saveGlobalAvatarColor();
   });
   valSlider.addEventListener("input", () => {
     drawComposite();
-    saveAvatarColor();
+    saveGlobalAvatarColor();
   });
-  
-  // For the initial load, set the saved slider values and load thumbnails for the current category.
-  loadAvatarData();
-  populateThumbnails(sectionSelect.value);
+
   drawComposite();
 }
 
-// Fetch the sprites manifest and initialize.
+// Fetch the sprites manifest JSON and initialize after it loads.
 fetch("sprites.json")
   .then(response => response.json())
   .then(data => {
