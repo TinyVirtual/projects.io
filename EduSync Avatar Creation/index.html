@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sprite Color Changer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Sprite Color Changer</h1>
+    <!-- Canvas -->
+    <canvas id="spriteCanvas" width="200" height="200"></canvas>
+
+    <!-- Selected Category Info -->
+    <div id="selectedInfo">
+      Selected: <span id="selectedSection"></span>
+      <span id="selectedSubsection"></span>
+    </div>
+
+    <!-- Category & (optional) Subcategory Dropdowns -->
+    <div class="controls">
+      <label for="sectionSelect">Category:</label>
+      <select id="sectionSelect">
+        <option value="Bases">Bases</option>
+        <option value="Clothing">Clothing</option>
+        <option value="Eyes">Eyes</option>
+        <option value="Mouths">Mouths</option>
+      </select>
+
+      <!-- This dropdown only appears when Clothing is selected -->
+      <select id="clothingSubsection" style="display:none;">
+        <option value="Bottom">Bottom</option>
+        <option value="Eyewear">Eyewear</option>
+        <option value="Gloves">Gloves</option>
+        <option value="Hats">Hats</option>
+        <option value="Shoes">Shoes</option>
+        <option value="Top">Top</option>
+      </select>
+    </div>
+
+    <!-- Sprite Thumbnails Slider -->
+    <div id="spriteThumbsContainer" class="thumbs-container"></div>
+
+    <!-- Color Sliders -->
+    <div class="slider-container">
+      <div class="slider">
+        <label for="hueSlider">Hue:</label>
+        <input type="range" id="hueSlider" min="0" max="360" value="0">
+        <span id="hueValue">0</span>°
+      </div>
+      <div class="slider">
+        <label for="satSlider">Saturation:</label>
+        <input type="range" id="satSlider" min="0" max="100" value="100">
+        <span id="satValue">100</span>%
+      </div>
+      <div class="slider">
+        <label for="valSlider">Value:</label>
+        <input type="range" id="valSlider" min="0" max="100" value="100">
+        <span id="valValue">100</span>%
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
