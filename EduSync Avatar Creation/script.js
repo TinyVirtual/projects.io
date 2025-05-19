@@ -1,9 +1,9 @@
 let spritesManifest = {};
-// Store the currently selected Image for each layer
 const currentImages = {
   "Bases": null,
   "Clothing": null,
   "Eyes": null,
+  "Hair": null,
   "Mouths": null
 };
 
@@ -25,10 +25,11 @@ const clothingSubsection = document.getElementById("clothingSubsection");
 const thumbsBases = document.getElementById("thumbs-bases");
 const thumbsClothing = document.getElementById("thumbs-clothing");
 const thumbsEyes = document.getElementById("thumbs-eyes");
+const thumbsHair = document.getElementById("thumbs-hair");
 const thumbsMouths = document.getElementById("thumbs-mouths");
 
 /**
- * Load an image for a given layer from the provided folder
+ * Load an image for a given layer from the provided folder.
  */
 function loadImage(layer, fileName, folderPath) {
   const img = new Image();
@@ -65,6 +66,11 @@ function populateThumbnails(layer) {
       container = thumbsEyes;
       files = spritesManifest["Eyes"] || [];
       folderPath = "sprites/Eyes/";
+      break;
+    case "Hair":
+      container = thumbsHair;
+      files = spritesManifest["Hair"] || [];
+      folderPath = "sprites/Hair/";
       break;
     case "Mouths":
       container = thumbsMouths;
@@ -131,7 +137,6 @@ function hsvToRgb(h, s, v) {
 
 /**
  * Create an offscreen canvas containing the tinted version of an image.
- * The tint is applied with a multiply composite so that shading is preserved.
  */
 function getTintedCanvas(image, width, height, tintColor) {
   const off = document.createElement("canvas");
@@ -149,27 +154,21 @@ function getTintedCanvas(image, width, height, tintColor) {
 }
 
 /**
- * Draw all layers (Bases, Clothing, Eyes, Mouths) onto the main canvas.
- * The global sliders set a tint color that is applied using a color multiplier.
+ * Draw all layers (Bases, Clothing, Eyes, Hair, Mouths) onto the main canvas.
  */
 function drawComposite() {
-  // Update slider display values.
+  // Convert the HSV slider values to an RGB color.
   const hue = parseInt(hueSlider.value, 10);
   const sat = parseFloat(satSlider.value) / 100;
   const val = parseFloat(valSlider.value) / 100;
-  hueValue.textContent = hue;
-  satValue.textContent = satSlider.value;
-  valValue.textContent = valSlider.value;
-
-  // Convert the HSV slider values to an RGB color.
   const rgb = hsvToRgb(hue, sat, val);
   const tintColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 
   // Clear the main canvas.
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw layers in order: Bases, Clothing, Eyes, Mouths.
-  const layers = ["Bases", "Clothing", "Eyes", "Mouths"];
+  // Draw layers in order: Bases, Clothing, Eyes, Hair, Mouths.
+  const layers = ["Bases", "Clothing", "Eyes", "Hair", "Mouths"];
   layers.forEach(layer => {
     const img = currentImages[layer];
     if (img && img.complete && img.naturalWidth !== 0) {
@@ -181,26 +180,25 @@ function drawComposite() {
 }
 
 /**
- * Once the manifest is loaded, initialize the UI and populate each layer’s thumbnails.
+ * Initialize the UI and populate thumbnails for all layers.
  */
 function init() {
   populateThumbnails("Bases");
   populateThumbnails("Clothing");
   populateThumbnails("Eyes");
+  populateThumbnails("Hair");
   populateThumbnails("Mouths");
 
-  // Update Clothing thumbnails when its subcategory changes.
   clothingSubsection.addEventListener("change", () => {
     populateThumbnails("Clothing");
   });
 
-  // Update composite when sliders change.
   hueSlider.addEventListener("input", drawComposite);
   satSlider.addEventListener("input", drawComposite);
   valSlider.addEventListener("input", drawComposite);
 }
 
-// Fetch the sprites manifest and then initialize the UI.
+// Fetch the sprites manifest and initialize the UI.
 fetch("sprites.json")
   .then(response => response.json())
   .then(data => {
@@ -210,3 +208,4 @@ fetch("sprites.json")
   .catch(error => {
     console.error("Error loading sprites manifest:", error);
   });
+console.log("v 1.5.1")
