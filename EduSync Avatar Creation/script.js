@@ -67,7 +67,7 @@ function saveAvatarColor() {
 }
 
 /**
- * Load saved slider values for the active category.
+ * Load saved slider values for the active category into the UI.
  */
 function loadAvatarData() {
   const activeCategory = getActiveCategory();
@@ -77,6 +77,8 @@ function loadAvatarData() {
     satSlider.value = avatarData.slider[activeCategory].sat;
     valSlider.value = avatarData.slider[activeCategory].val;
   } else {
+    // For the active slider UI we use defaults that you want to start with.
+    // (You might choose different defaults if you want the sprite to appear unaltered.)
     hueSlider.value = 0;
     satSlider.value = 100;
     valSlider.value = 100;
@@ -91,7 +93,7 @@ function loadImage(categoryKey, fileName, folderPath) {
   const img = new Image();
   img.src = folderPath + fileName;
   img.onload = function () {
-    // Save the image under the key (eg. "Bases" or "Top").
+    // Save the image under the key (e.g. "Bases" or "Top").
     currentImages[categoryKey] = img;
     drawComposite();
     saveSelectedSprite(categoryKey, fileName);
@@ -185,6 +187,7 @@ function hsvToRgb(h, s, v) {
 
 /**
  * Create an offscreen canvas with the tinted version of an image.
+ * (Using 'multiply' so the shading is preserved.)
  */
 function getTintedCanvas(image, width, height, tintColor) {
   const off = document.createElement("canvas");
@@ -202,27 +205,16 @@ function getTintedCanvas(image, width, height, tintColor) {
 }
 
 /**
- * Draws the composite avatar from all saved layers.
- * Only the active category layer (as given by the dropdowns) is tinted using the slider values.
+ * Draw the composite avatar from all saved layers.
+ * Each layer is tinted using its own stored slider values.
+ * If a layer is active, the UI’s current slider values are used.
+ * For all other layers, if no values are saved, an identity tint (white)
+ * is applied so that the sprite is drawn in its original colors.
  */
 function drawComposite() {
-  // Determine the active category to tint.
-  const activeCategory = getActiveCategory();
-  // Get slider values.
-  const hue = parseInt(hueSlider.value, 10);
-  const sat = parseFloat(satSlider.value) / 100;
-  const val = parseFloat(valSlider.value) / 100;
-  
-  hueValue.textContent = hue;
-  satValue.textContent = satSlider.value;
-  valValue.textContent = valSlider.value;
-  
-  const rgb = hsvToRgb(hue, sat, val);
-  const tintColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-  
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  // Define layering order. You can adjust this order per your design.
+  // Define the layering order.
   const layeringOrder = [
     "Bases",
     "Bottom",  // Clothing sub-category
@@ -236,16 +228,41 @@ function drawComposite() {
     "Shoes"    // Clothing sub-category
   ];
   
+  // Determine the active category.
+  const activeCategory = getActiveCategory();
+  
   layeringOrder.forEach(layer => {
     const img = currentImages[layer];
     if (img && img.complete && img.naturalWidth !== 0) {
-      // Only tint the active layer.
+      // For the active category, use the slider values from the UI.
+      // Otherwise, use any previously saved slider values, or default to an identity tint.
+      let sliderSettings;
       if (layer === activeCategory) {
-        const tinted = getTintedCanvas(img, canvas.width, canvas.height, tintColor);
-        ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
+        sliderSettings = {
+          hue: hueSlider.value,
+          sat: satSlider.value,
+          val: valSlider.value
+        };
+        // Update the slider display values.
+        hueValue.textContent = sliderSettings.hue;
+        satValue.textContent = sliderSettings.sat;
+        valValue.textContent = sliderSettings.val;
       } else {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        let avatarData = JSON.parse(localStorage.getItem("avatarData") || "{}");
+        // Default to a tint that leaves the image unchanged: saturation 0 yields white.
+        sliderSettings = (avatarData.slider && avatarData.slider[layer]) || { hue: 0, sat: 0, val: 100 };
       }
+      
+      // Convert slider values to numbers.
+      const hue = parseInt(sliderSettings.hue, 10);
+      const sat = parseFloat(sliderSettings.sat) / 100;
+      const val = parseFloat(sliderSettings.val) / 100;
+      const rgb = hsvToRgb(hue, sat, val);
+      const tintColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+      
+      // Draw tinted image.
+      const tinted = getTintedCanvas(img, canvas.width, canvas.height, tintColor);
+      ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
     }
   });
 }
@@ -274,7 +291,7 @@ function init() {
     drawComposite();
   });
   
-  // Slider event listeners.
+  // Slider event listeners for the active category.
   hueSlider.addEventListener("input", () => {
     drawComposite();
     saveAvatarColor();
