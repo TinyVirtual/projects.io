@@ -4,3 +4,5 @@
 
 
 [storytelling](https://tinyvirtual.github.io/projects.io/story.html)
+
+[avatar test](https://tinyvirtual.github.io/projects.io/EduSync%20Avatar%20Creation/index.html)
