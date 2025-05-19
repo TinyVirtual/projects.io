@@ -1,9 +1,9 @@
-const VERSION = '1.5.1';
+const VERSION = '1.5.3';
 console.log(`script.js version ${VERSION}`);
 
 let spritesManifest = {};
 // Store the currently selected image for each layer.
-const currentImages = {
+let currentImages = {
   "Bases": null,
   "Clothing": null,
   "Eyes": null,
