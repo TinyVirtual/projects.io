@@ -1,6 +1,6 @@
 const VERSION = '1.5.4';
 console.log(`script.js version ${VERSION}`);
-
+ 
 let spritesManifest = {};
 // Store the currently selected image for each layer.
 const currentImages = {
