@@ -1,189 +1,206 @@
 let spritesManifest = {};
-let currentImage = new Image();
-let currentFileName = "";
+// Store the currently selected Image for each layer
+const currentImages = {
+  "Bases": null,
+  "Clothing": null,
+  "Eyes": null,
+  "Mouths": null
+};
+
+// Get canvas and slider elements
+const canvas = document.getElementById("spriteCanvas");
+const ctx = canvas.getContext("2d");
 
 const hueSlider = document.getElementById("hueSlider");
 const satSlider = document.getElementById("satSlider");
 const valSlider = document.getElementById("valSlider");
+
 const hueValue = document.getElementById("hueValue");
 const satValue = document.getElementById("satValue");
 const valValue = document.getElementById("valValue");
 
-const sectionSelect = document.getElementById("sectionSelect");
 const clothingSubsection = document.getElementById("clothingSubsection");
-const spriteThumbsContainer = document.getElementById("spriteThumbsContainer");
 
-const selectedSectionSpan = document.getElementById("selectedSection");
-const selectedSubsectionSpan = document.getElementById("selectedSubsection");
-
-const canvas = document.getElementById("spriteCanvas");
-const ctx = canvas.getContext("2d");
+// Get thumbnail container elements for each layer
+const thumbsBases = document.getElementById("thumbs-bases");
+const thumbsClothing = document.getElementById("thumbs-clothing");
+const thumbsEyes = document.getElementById("thumbs-eyes");
+const thumbsMouths = document.getElementById("thumbs-mouths");
 
 /**
- * Converts HSV (with s and v between 0 and 1) to HSL.
+ * Load an image for a given layer from the provided folder
  */
-function hsvToHsl(h, s, v) {
-  let l = (2 - s) * v / 2;
-  let newS = (s * v) / (l <= 1 ? l : 2 - l);
-  if (isNaN(newS)) newS = 0;
-  return { h: h, s: newS * 100, l: l * 100 };
+function loadImage(layer, fileName, folderPath) {
+  const img = new Image();
+  img.src = folderPath + fileName;
+  img.onload = function() {
+    currentImages[layer] = img;
+    drawComposite();
+  };
+  img.onerror = function() {
+    console.error("Error loading image", folderPath + fileName);
+  };
+  return img;
 }
 
 /**
- * Update the text above the thumbnails to show the selected category (and subcategory).
+ * Populate the thumbnail slider for the specified layer.
+ * For Clothing, it uses the currently selected subcategory.
  */
-function updateSelectedInfo() {
-  const section = sectionSelect.value;
-  selectedSectionSpan.textContent = section;
-  if (section === "Clothing") {
-    selectedSubsectionSpan.textContent = clothingSubsection.value;
-  } else {
-    selectedSubsectionSpan.textContent = "";
+function populateThumbnails(layer) {
+  let container, files = [], folderPath = "";
+  switch (layer) {
+    case "Bases":
+      container = thumbsBases;
+      files = spritesManifest["Bases"] || [];
+      folderPath = "sprites/Bases/";
+      break;
+    case "Clothing":
+      container = thumbsClothing;
+      const subcat = clothingSubsection.value;
+      files = (spritesManifest["Clothing"] && spritesManifest["Clothing"][subcat]) || [];
+      folderPath = `sprites/Clothing/${subcat}/`;
+      break;
+    case "Eyes":
+      container = thumbsEyes;
+      files = spritesManifest["Eyes"] || [];
+      folderPath = "sprites/Eyes/";
+      break;
+    case "Mouths":
+      container = thumbsMouths;
+      files = spritesManifest["Mouths"] || [];
+      folderPath = "sprites/Mouths/";
+      break;
+    default:
+      break;
   }
-}
 
-/**
- * Build the thumbnail “slider” based on the current selection.
- */
-function updateSpriteThumbnails() {
-  updateSelectedInfo();
-  
-  const section = sectionSelect.value;
-  let spriteFiles = [];
-  
-  if (section === "Clothing") {
-    spriteFiles = spritesManifest["Clothing"][clothingSubsection.value] || [];
-  } else {
-    spriteFiles = spritesManifest[section] || [];
-  }
-  
-  // Clear any existing thumbnails
-  spriteThumbsContainer.innerHTML = "";
-  
-  spriteFiles.forEach(file => {
-    const img = document.createElement("img");
-    let folderPath = "";
-    if (section === "Clothing") {
-      folderPath = `sprites/Clothing/${clothingSubsection.value}/`;
-    } else {
-      folderPath = `sprites/${section}/`;
-    }
-    img.src = folderPath + file;
-    img.alt = file;
-    
-    // When a thumbnail is clicked, load that sprite and highlight it.
-    img.addEventListener("click", () => {
-      currentFileName = file;
-      loadSprite(file);
-      
-      // Remove "selected" class from all thumbnails and add to the clicked one.
-      spriteThumbsContainer.querySelectorAll("img").forEach(thumb => thumb.classList.remove("selected"));
-      img.classList.add("selected");
+  // Clear previous thumbnails
+  container.innerHTML = "";
+
+  files.forEach(file => {
+    const imgThumb = document.createElement("img");
+    imgThumb.src = folderPath + file;
+    imgThumb.alt = file;
+    imgThumb.addEventListener("click", () => {
+      // Remove 'selected' class from all images in the container
+      container.querySelectorAll("img").forEach(img => img.classList.remove("selected"));
+      imgThumb.classList.add("selected");
+      loadImage(layer, file, folderPath);
     });
-    
-    spriteThumbsContainer.appendChild(img);
+    container.appendChild(imgThumb);
   });
-  
-  // If available, load the first sprite by default.
-  if (spriteFiles.length > 0) {
-    const firstThumbnail = spriteThumbsContainer.querySelector("img");
-    if (firstThumbnail) {
-      firstThumbnail.classList.add("selected");
+
+  // Auto-select the first thumbnail if available
+  if (files.length > 0) {
+    const firstThumb = container.querySelector("img");
+    if (firstThumb) {
+      firstThumb.classList.add("selected");
+      loadImage(layer, files[0], folderPath);
     }
-    currentFileName = spriteFiles[0];
-    loadSprite(spriteFiles[0]);
-  } else {
-    clearCanvas();
   }
 }
 
 /**
- * Load a sprite image based on the current category selection.
+ * Converts HSV (with h in [0,360] and s, v in [0,1]) to an RGB object.
  */
-function loadSprite(fileName) {
-  const section = sectionSelect.value;
-  let folderPath = "";
-  
-  if (section === "Clothing") {
-    folderPath = `sprites/Clothing/${clothingSubsection.value}/`;
+function hsvToRgb(h, s, v) {
+  let c = v * s;
+  let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  let m = v - c;
+  let r, g, b;
+  if (h < 60) {
+    r = c; g = x; b = 0;
+  } else if (h < 120) {
+    r = x; g = c; b = 0;
+  } else if (h < 180) {
+    r = 0; g = c; b = x;
+  } else if (h < 240) {
+    r = 0; g = x; b = c;
+  } else if (h < 300) {
+    r = x; g = 0; b = c;
   } else {
-    folderPath = `sprites/${section}/`;
+    r = c; g = 0; b = x;
   }
-  
-  currentImage = new Image();
-  currentImage.src = folderPath + fileName;
-  
-  currentImage.onload = () => {
-    drawSprite();
-  };
-  
-  currentImage.onerror = () => {
-    console.error("Failed to load sprite:", currentImage.src);
-    clearCanvas();
+  return {
+    r: Math.round((r + m) * 255),
+    g: Math.round((g + m) * 255),
+    b: Math.round((b + m) * 255)
   };
 }
 
 /**
- * Clear the canvas.
+ * Create an offscreen canvas containing the tinted version of an image.
+ * The tint is applied with a multiply composite so that shading is preserved.
  */
-function clearCanvas() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function getTintedCanvas(image, width, height, tintColor) {
+  const off = document.createElement("canvas");
+  off.width = width;
+  off.height = height;
+  const offCtx = off.getContext("2d");
+  offCtx.drawImage(image, 0, 0, width, height);
+  offCtx.globalCompositeOperation = "multiply";
+  offCtx.fillStyle = tintColor;
+  offCtx.fillRect(0, 0, width, height);
+  offCtx.globalCompositeOperation = "destination-in";
+  offCtx.drawImage(image, 0, 0, width, height);
+  offCtx.globalCompositeOperation = "source-over"; // Reset composite
+  return off;
 }
 
 /**
- * Draw the current sprite with the tint overlay from the slider values.
- * This function checks if the image is fully loaded.
+ * Draw all layers (Bases, Clothing, Eyes, Mouths) onto the main canvas.
+ * The global sliders set a tint color that is applied using a color multiplier.
  */
-function drawSprite() {
-  if (!currentImage || !currentImage.complete || currentImage.naturalWidth === 0) {
-    return;
-  }
-  
+function drawComposite() {
+  // Update slider display values.
   const hue = parseInt(hueSlider.value, 10);
   const sat = parseFloat(satSlider.value) / 100;
   const val = parseFloat(valSlider.value) / 100;
-  
   hueValue.textContent = hue;
   satValue.textContent = satSlider.value;
   valValue.textContent = valSlider.value;
-  
-  const hsl = hsvToHsl(hue, sat, val);
-  const tintColor = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
-  
-  clearCanvas();
-  ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
-  
-  // Apply a tint to non-transparent pixels
-  ctx.globalCompositeOperation = "source-atop";
-  ctx.fillStyle = tintColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.globalCompositeOperation = "source-over";
+
+  // Convert the HSV slider values to an RGB color.
+  const rgb = hsvToRgb(hue, sat, val);
+  const tintColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+
+  // Clear the main canvas.
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw layers in order: Bases, Clothing, Eyes, Mouths.
+  const layers = ["Bases", "Clothing", "Eyes", "Mouths"];
+  layers.forEach(layer => {
+    const img = currentImages[layer];
+    if (img && img.complete && img.naturalWidth !== 0) {
+      // Create a tinted version using our multiplier method.
+      const tinted = getTintedCanvas(img, canvas.width, canvas.height, tintColor);
+      ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
+    }
+  });
 }
 
 /**
- * Initialize event listeners and set up the UI.
+ * Once the manifest is loaded, initialize the UI and populate each layer’s thumbnails.
  */
 function init() {
-  sectionSelect.addEventListener("change", () => {
-    if (sectionSelect.value === "Clothing") {
-      clothingSubsection.style.display = "inline";
-    } else {
-      clothingSubsection.style.display = "none";
-    }
-    updateSpriteThumbnails();
+  populateThumbnails("Bases");
+  populateThumbnails("Clothing");
+  populateThumbnails("Eyes");
+  populateThumbnails("Mouths");
+
+  // Update Clothing thumbnails when its subcategory changes.
+  clothingSubsection.addEventListener("change", () => {
+    populateThumbnails("Clothing");
   });
-  
-  clothingSubsection.addEventListener("change", updateSpriteThumbnails);
-  
-  hueSlider.addEventListener("input", drawSprite);
-  satSlider.addEventListener("input", drawSprite);
-  valSlider.addEventListener("input", drawSprite);
-  
-  // Build the initial thumbnails and load the first sprite.
-  updateSpriteThumbnails();
+
+  // Update composite when sliders change.
+  hueSlider.addEventListener("input", drawComposite);
+  satSlider.addEventListener("input", drawComposite);
+  valSlider.addEventListener("input", drawComposite);
 }
 
-// Fetch the sprite manifest and then initialize.
+// Fetch the sprites manifest and then initialize the UI.
 fetch("sprites.json")
   .then(response => response.json())
   .then(data => {
