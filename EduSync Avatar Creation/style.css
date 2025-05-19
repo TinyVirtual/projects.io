@@ -1,6 +1,6 @@
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
+  font-family: cursive;
+  background-color: #20205a;
   text-align: center;
   margin: 0;
   padding: 20px;
@@ -13,6 +13,24 @@ body {
 
 canvas {
   margin-bottom: 20px;
+}
+
+select {
+    border: #001457, 5px, solid
+    border-radius: 20px;
+    height: 50px;
+    font-size: 20px;
+    font-family: cursive;
+    color: white;
+    background: blue;
+    font-weight: 500;
+}
+
+label a {
+    font-family: cursive;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 500;
 }
 
 .controls {
@@ -40,6 +58,8 @@ canvas {
   object-fit: contain;
   border: 2px solid transparent;
   cursor: pointer;
+  background: #0a1025;
+  border-radius: 20px;
 }
 
 .thumbs-container img.selected {
