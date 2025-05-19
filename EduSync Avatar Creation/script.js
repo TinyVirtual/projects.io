@@ -330,6 +330,10 @@ function init() {
     loadAvatarData();
     populateThumbnails(getActiveCategory());
     drawComposite();
+    for (let i = 5; i < thumbsContainer.children.length; i += 6) {
+        const br = document.createElement("br");
+        thumbsContainer.children[i].after(br);
+    }
   });
   
   // When the clothing sub-category changes.
