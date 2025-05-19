@@ -1,9 +1,9 @@
-const VERSION = '1.5.3';
+const VERSION = '1.5.4';
 console.log(`script.js version ${VERSION}`);
 
 let spritesManifest = {};
 // Store the currently selected image for each layer.
-let currentImages = {
+const currentImages = {
   "Bases": null,
   "Clothing": null,
   "Eyes": null,
@@ -88,11 +88,11 @@ function populateThumbnails(layer) {
   // If the container element doesn't exist, warn and skip.
   if (!container) {
     console.warn(`Container for layer ${layer} not found. Skipping thumbnail population.`);
-    return;
+  } else {
+    container.innerHTML = "";
   }
 
   // Clear previous thumbnails.
-  container.innerHTML = "";
 
   files.forEach(file => {
     const imgThumb = document.createElement("img");
