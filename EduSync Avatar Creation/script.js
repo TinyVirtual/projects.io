@@ -1,4 +1,8 @@
+const VERSION = '1.5.1';
+console.log(`script.js version ${VERSION}`);
+
 let spritesManifest = {};
+// Store the currently selected image for each layer.
 const currentImages = {
   "Bases": null,
   "Clothing": null,
@@ -7,7 +11,7 @@ const currentImages = {
   "Mouths": null
 };
 
-// Get canvas and slider elements
+// Get canvas and slider elements.
 const canvas = document.getElementById("spriteCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -21,7 +25,7 @@ const valValue = document.getElementById("valValue");
 
 const clothingSubsection = document.getElementById("clothingSubsection");
 
-// Get thumbnail container elements for each layer
+// Get thumbnail container elements for each layer.
 const thumbsBases = document.getElementById("thumbs-bases");
 const thumbsClothing = document.getElementById("thumbs-clothing");
 const thumbsEyes = document.getElementById("thumbs-eyes");
@@ -58,7 +62,7 @@ function populateThumbnails(layer) {
       break;
     case "Clothing":
       container = thumbsClothing;
-      const subcat = clothingSubsection.value;
+      const subcat = clothingSubsection ? clothingSubsection.value : "";
       files = (spritesManifest["Clothing"] && spritesManifest["Clothing"][subcat]) || [];
       folderPath = `sprites/Clothing/${subcat}/`;
       break;
@@ -81,7 +85,13 @@ function populateThumbnails(layer) {
       break;
   }
 
-  // Clear previous thumbnails
+  // If the container element doesn't exist, warn and skip.
+  if (!container) {
+    console.warn(`Container for layer ${layer} not found. Skipping thumbnail population.`);
+    return;
+  }
+
+  // Clear previous thumbnails.
   container.innerHTML = "";
 
   files.forEach(file => {
@@ -89,7 +99,7 @@ function populateThumbnails(layer) {
     imgThumb.src = folderPath + file;
     imgThumb.alt = file;
     imgThumb.addEventListener("click", () => {
-      // Remove 'selected' class from all images in the container
+      // Remove 'selected' class from all images in the container.
       container.querySelectorAll("img").forEach(img => img.classList.remove("selected"));
       imgThumb.classList.add("selected");
       loadImage(layer, file, folderPath);
@@ -97,7 +107,7 @@ function populateThumbnails(layer) {
     container.appendChild(imgThumb);
   });
 
-  // Auto-select the first thumbnail if available
+  // Auto-select the first thumbnail if available.
   if (files.length > 0) {
     const firstThumb = container.querySelector("img");
     if (firstThumb) {
@@ -137,6 +147,7 @@ function hsvToRgb(h, s, v) {
 
 /**
  * Create an offscreen canvas containing the tinted version of an image.
+ * The tint is applied with a multiply composite so that shading is preserved.
  */
 function getTintedCanvas(image, width, height, tintColor) {
   const off = document.createElement("canvas");
@@ -157,10 +168,14 @@ function getTintedCanvas(image, width, height, tintColor) {
  * Draw all layers (Bases, Clothing, Eyes, Hair, Mouths) onto the main canvas.
  */
 function drawComposite() {
-  // Convert the HSV slider values to an RGB color.
+  // Update slider display values.
   const hue = parseInt(hueSlider.value, 10);
   const sat = parseFloat(satSlider.value) / 100;
   const val = parseFloat(valSlider.value) / 100;
+  hueValue.textContent = hue;
+  satValue.textContent = satSlider.value;
+  valValue.textContent = valSlider.value;
+
   const rgb = hsvToRgb(hue, sat, val);
   const tintColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 
@@ -172,7 +187,6 @@ function drawComposite() {
   layers.forEach(layer => {
     const img = currentImages[layer];
     if (img && img.complete && img.naturalWidth !== 0) {
-      // Create a tinted version using our multiplier method.
       const tinted = getTintedCanvas(img, canvas.width, canvas.height, tintColor);
       ctx.drawImage(tinted, 0, 0, canvas.width, canvas.height);
     }
@@ -189,9 +203,11 @@ function init() {
   populateThumbnails("Hair");
   populateThumbnails("Mouths");
 
-  clothingSubsection.addEventListener("change", () => {
-    populateThumbnails("Clothing");
-  });
+  if (clothingSubsection) {
+    clothingSubsection.addEventListener("change", () => {
+      populateThumbnails("Clothing");
+    });
+  }
 
   hueSlider.addEventListener("input", drawComposite);
   satSlider.addEventListener("input", drawComposite);
@@ -208,4 +224,3 @@ fetch("sprites.json")
   .catch(error => {
     console.error("Error loading sprites manifest:", error);
   });
-console.log("v 1.5.1")
