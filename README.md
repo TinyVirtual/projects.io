@@ -1,6 +1,6 @@
 # Pages
 
-[Avatar Test](https://tinyvirtual.github.io/projects.io/EduSync%20Avatar%20Creation/index.html)
+[Avatar Test](https://tinyvirtual.github.io/projects.io/EduSync%20Avatar%20Creation/index.html)<br>
 [More Soon](https://tinyvirtual.github.io/projects.io/soon.html)
 
 # Bookmarklets
