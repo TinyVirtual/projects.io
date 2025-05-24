@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Rainbow Text</title>
+    <style>
+        body {
+            background: transparent; /* Ensure transparency */
+            text-align: center;
+            margin: 0;
+        }
+
+        @keyframes rainbow {
+            0% {color: red;}
+            16% {color: orange;}
+            33% {color: yellow;}
+            50% {color: green;}
+            66% {color: blue;}
+            83% {color: indigo;}
+            100% {color: violet;}
+        }
+
+        .rainbow-text {
+            font-size: 30px;
+            font-weight: bold;
+            animation: rainbow 3s infinite;
+        }
+    </style>
+</head>
+<body>
+    <p id="dynamic-text" class="rainbow-text">Loading...</p>
+
+    <script>
+        // Function to get URL parameters
+        function getQueryParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+
+        // Get the "t" parameter and update the text
+        const textParam = getQueryParam("t");
+        if (textParam) {
+            document.getElementById("dynamic-text").innerText = textParam;
+        }
+
+        // Check if inside an iframe
+        function isInIframe() {
+            return window.self !== window.top;
+        }
+
+        // Adjust iframe size dynamically
+        function adjustIframeSize() {
+            if (isInIframe()) {
+                document.body.style.overflow = "hidden"; // Hide scrollbars
+
+                let contentHeight = document.documentElement.scrollHeight;
+                let contentWidth = document.documentElement.scrollWidth;
+
+                // Send size to parent iframe
+                window.parent.postMessage({ height: contentHeight, width: contentWidth }, "*");
+            }
+        }
+
+        window.onload = adjustIframeSize;
+      //  oh you're a programmer? i bet, why u using ai codes
+      //  cuz im lazy lol
+      //  - Tiny, Brazil, May 24 2025
+    </script>
+</body>
+</html>
