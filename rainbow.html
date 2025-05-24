@@ -29,7 +29,7 @@
     </style>
 </head>
 <body>
-    <p id="dynamic-text" class="rainbow-text">Loading...</p>
+    <p id="dynamic-text" class="rainbow-text">...</p>
 
     <script>
         // Function to get URL parameters
@@ -42,6 +42,8 @@
         const textParam = getQueryParam("t");
         if (textParam) {
             document.getElementById("dynamic-text").innerText = textParam;
+        } else {
+            console.warn("No text provided, to change text, enter the text here --> ...rainbow.html?t=HERE")
         }
 
         // Check if inside an iframe
