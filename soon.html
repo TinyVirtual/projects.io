@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soon...</title>
+    <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        h1 {
+            position: absolute;
+            font-size: 3em;
+            font-family: Arial, sans-serif;
+            color: white;
+            cursor: pointer; /* Torna o texto clicável */
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="dvd">Soon</h1>
+    <audio id="bounce-sound" src="https://www.myinstants.com/media/sounds/bumpintowall_X5CNQPB.mp3"></audio>
+    
+    <script>
+        const dvd = document.getElementById("dvd");
+        const bounceSound = document.getElementById("bounce-sound");
+
+        let x = Math.random() * (window.innerWidth - dvd.offsetWidth);
+        let y = Math.random() * (window.innerHeight - dvd.offsetHeight);
+        let vx = 2;
+        let vy = 2;
+        let colors = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"];
+        let colorIndex = 0;
+
+        function updatePosition() {
+            x += vx;
+            y += vy;
+
+            let hitBorder = false;
+
+            if (x + dvd.offsetWidth >= window.innerWidth || x <= 0) {
+                vx *= -1;
+                changeColor();
+                hitBorder = true;
+            }
+
+            if (y + dvd.offsetHeight >= window.innerHeight || y <= 0) {
+                vy *= -1;
+                changeColor();
+                hitBorder = true;
+            }
+
+            if (hitBorder) {
+                bounceSound.currentTime = 0;
+                bounceSound.playbackRate = Math.random() * (1.5 - 0.8) + 0.8; // Pitch aleatório
+                bounceSound.play();
+            }
+
+            dvd.style.left = `${x}px`;
+            dvd.style.top = `${y}px`;
+
+            requestAnimationFrame(updatePosition);
+        }
+
+        function changeColor() {
+            colorIndex = (colorIndex + 1) % colors.length;
+            dvd.style.color = colors[colorIndex];
+        }
+
+        dvd.style.position = "absolute";
+        updatePosition();
+
+        dvd.addEventListener("click", function() {
+            window.location.href = "https://tinyvirtual.github.io/projects.io/mystery.html";
+        });
+    </script>
+</body>
+</html>

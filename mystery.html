@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>...</title>
+    <style>
+        body {
+            background-color: #111;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            transition: background-color 1s ease-in-out;
+        }
+
+        h1 {
+            font-size: 4em;
+            font-family: Arial, sans-serif;
+            color: white;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .pulse {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(100px);
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="start">...</h1>
+    <audio id="pulse-sound" src="https://www.myinstants.com/media/sounds/thunder-show.mp3"></audio>
+    <audio id="background-music" src="https://www.myinstants.com/media/sounds/heavy-wind-1.mp3" loop=""></audio>
+
+    <script>
+        let effectsStarted = false;
+        const body = document.body;
+        const startText = document.getElementById("start");
+        const pulseSound = document.getElementById("pulse-sound");
+        const backgroundMusic = document.getElementById("background-music");
+
+        function startEffects() {
+            if (!effectsStarted) {
+                effectsStarted = true;
+                backgroundMusic.volume = 1;
+                backgroundMusic.play();
+                startText.style.opacity = 0;
+                startPulse();
+                shakeMouse();
+            }
+        }
+
+        function randomPosition() {
+            let x = Math.random() * window.innerWidth;
+            let y = Math.random() * window.innerHeight;
+            return { x, y };
+        }
+
+        function randomColor() {
+            let r = Math.floor(Math.random() * 100) + 50;
+            let g = Math.floor(Math.random() * 100) + 50;
+            let b = Math.floor(Math.random() * 100) + 50;
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function pulseEffect() {
+            let { x, y } = randomPosition();
+            let pulse = document.createElement("div");
+            pulse.className = "pulse";
+            pulse.style.width = `${Math.random() * (600 - 400) + 400}px`;
+            pulse.style.height = pulse.style.width;
+            pulse.style.left = `${x}px`;
+            pulse.style.top = `${y}px`;
+            pulse.style.backgroundColor = randomColor();
+            document.body.appendChild(pulse);
+
+            setTimeout(() => {
+                pulse.style.opacity = 1;
+                pulseSound.currentTime = 0;
+                pulseSound.volume = 0.1;
+                pulseSound.playbackRate = 0.8;
+                pulseSound.play();
+            }, 100);
+
+            setTimeout(() => {
+                pulse.style.opacity = 0;
+                setTimeout(() => pulse.remove(), 1500);
+            }, 1500);
+        }
+
+        function startPulse() {
+            pulseEffect();
+            setTimeout(startPulse, Math.random() * (12000 - 6000) + 6000);
+        }
+
+        function shakeMouse() {
+            let intensity = 10;
+            setInterval(() => {
+                let xOffset = Math.random() * intensity - intensity / 2;
+                let yOffset = Math.random() * intensity - intensity / 2;
+                document.body.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+            }, 200);
+        }
+
+        startText.addEventListener("click", startEffects);
+    </script>
+</body>
+</html>
