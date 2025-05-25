@@ -1,140 +1,103 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rainbow Text Generator</title>
+  <title>Rainbow Text GIF Generator</title>
   <style>
-    body {
-      background: transparent;
-      text-align: center;
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
-    .hidden { display: none; }
-    .controls { margin-top: 20px; }
-    .controls input, .controls select { margin: 5px; }
-    #output img { max-width: 100%; height: auto; }
+    body { font-family: sans-serif; max-width: 600px; margin: 2em auto; }
+    label { display: block; margin-top: 1em; }
+    input, select { width: 100%; padding: 0.5em; }
+    button { margin-top: 1em; padding: 0.7em 1.5em; }
+    #result { display: none; margin-top: 2em; }
+    #creator { display: block; }
   </style>
-  <!-- GIF.js library -->
-  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
 </head>
 <body>
-  <center>
-    <!-- Creator UI -->
-    <div id="creator">
-      <h1>Rainbow Text GIF Generator</h1>
-      <p>Useful for Markdown embedding</p>
-      <div class="controls">
-        <input type="text" id="text-input" placeholder="Your Text" value="Hello World!" />
-        <input type="number" id="size-input" placeholder="Font Size" value="24" />
-        <select id="font-select">
-          <option value="Arial">Arial</option>
-          <option value="Comic Sans MS, Patrick Hand, cursive">Comic Sans MS</option>
-          <option value="Playfair Display, Times New Roman, serif">Playfair Display</option>
-          <option value="Nunito, sans-serif">Nunito</option>
-          <option value="Montserrat, sans-serif">Montserrat</option>
-          <option value="Oswald, sans-serif">Oswald</option>
-          <option value="Lobster, cursive">Lobster</option>
-          <option value="Permanent Marker, cursive">Permanent Marker</option>
-          <option value="Pixelify Sans, sans-serif">Pixelify Sans</option>
-        </select>
-        <input type="number" id="weight-input" placeholder="Font Weight" value="400" />
-        <fieldset>
-          <legend>Text Formatting</legend>
-          <label><input type="checkbox" id="bold-checkbox" /> Bold</label>
-          <label><input type="checkbox" id="italic-checkbox" /> Italic</label>
-          <label><input type="checkbox" id="underline-checkbox" /> Underline</label>
-          <label><input type="checkbox" id="strike-checkbox" /> Strikethrough</label>
-        </fieldset>
-        <button id="generateBtn">Generate</button>
-      </div>
-    </div><!-- Output / Download UI -->
-<div id="output" class="hidden">
-  <h2 id="output-text"></h2>
-  <p><a id="markdown-link" href="#" target="_blank"></a></p>
-  <button id="copy-md">Copy Markdown</button>
-  <button id="copy-link">Copy Link</button>
-  <div><img id="preview" alt="GIF Preview"></div>
-  <button id="newBtn">Generate Other Image</button>
+
+<div id="creator">
+  <h1>Create Rainbow Text GIF</h1>
+  <label>Text: <input id="text" type="text"></label>
+  <label>Font: <input id="font" type="text" value="Arial"></label>
+  <label>Size: <input id="size" type="number" value="48"></label>
+  <label>Weight: <input id="weight" type="text" value="bold"></label>
+  <label>Cycle Time (s): <input id="cycle" type="number" value="3"></label>
+  <button id="generate">Generate</button>
 </div>
 
-  </center><canvas id="canvas" class="hidden"></canvas>
+<div id="result">
+  <h2>Generated GIF:</h2>
+  <img id="gif" alt="Generated GIF">
+  <p>Direct URL: <a id="gifLink" target="_blank">Open GIF</a></p>
+</div>
 
-  <script>
-    (async function() {
-      const params = new URLSearchParams(window.location.search);
-      const t = params.get('t');
-      if (t) {
-        // Direct generation mode
-        const s = parseFloat(params.get('s')) || 24;
-        const f = params.get('f') || 'Arial';
-        const w = parseInt(params.get('w')) || 400;
-        const bold = params.get('c') & 1;
-        const italic = params.get('c') & 2;
-        const underline = params.get('c') & 4;
-        const strike = params.get('c') & 8;
-        await generateAndRedirectGif(t, s, f, w, bold, italic, underline, strike);
-      } else {
-        // Show creator UI
-        document.getElementById('generateBtn').onclick = () => {
-          const txt = encodeURIComponent(document.getElementById('text-input').value);
-          const sz = document.getElementById('size-input').value;
-          const ft = encodeURIComponent(document.getElementById('font-select').value);
-          const wt = document.getElementById('weight-input').value;
-          let c = 0;
-          if (document.getElementById('bold-checkbox').checked) c |= 1;
-          if (document.getElementById('italic-checkbox').checked) c |= 2;
-          if (document.getElementById('underline-checkbox').checked) c |= 4;
-          if (document.getElementById('strike-checkbox').checked) c |= 8;
-          const link = `${location.pathname}?t=${txt}&s=${sz}&f=${ft}&w=${wt}&c=${c}`;
-          location.href = link;
-        };
-      }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.min.js"></script>
+<script>
+  function getParams() {
+    const params = new URLSearchParams(location.search);
+    return {
+      t: params.get('t'),
+      f: params.get('f'),
+      s: params.get('s'),
+      w: params.get('w'),
+      c: params.get('c')
+    };
+  }
 
-      async function generateAndRedirectGif(text, size, fontFamily, fontWeight, bold, italic, underline, strike) {
-        // Prepare canvas
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        ctx.font = `${italic?'italic ':''}${bold?'bold ':''}${fontWeight}px ${fontFamily}`;
-        const metrics = ctx.measureText(text);
-        canvas.width = Math.ceil(metrics.width) + 20;
-        canvas.height = Math.ceil(size * 1.5) + 20;
-        const x = 10;
-        const y = canvas.height / 2 + size/3;
+  function hasAllParams(p) {
+    return p.t && p.f && p.s && p.w && p.c;
+  }
 
-        // GIF setup
-        const fps = 20;
-        const duration = 3000; // ms
-        const frameCount = Math.ceil(fps * duration / 1000);
-        const gif = new GIF({ workers: 2, quality: 10, width: canvas.width, height: canvas.height, transparent: null });
+  function generateGIF({t, f, s, w, c}, callback) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 600;
+    canvas.height = 150;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.font = `${w} ${s}px ${f}`;
+    
+    const gif = new GIF({ workers: 2, quality: 10, width: canvas.width, height: canvas.height });
+    
+    const steps = 60;
+    for (let i = 0; i < steps; i++) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const hue = (i / steps) * 360;
+      ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+      ctx.fillText(t, canvas.width / 2, canvas.height / 2);
+      gif.addFrame(ctx, {copy: true, delay: (c * 1000) / steps});
+    }
+    
+    gif.on('finished', blob => callback(URL.createObjectURL(blob)));
+    gif.render();
+  }
 
-        // Draw frames
-        for (let i = 0; i < frameCount; i++) {
-          const hue = Math.round((i / frameCount) * 360);
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          // background transparent
-          ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
-          ctx.fillText(text, x, y);
-          if (underline) {
-            const wdt = ctx.measureText(text).width;
-            ctx.fillRect(x, y+5, wdt, Math.max(2, size/15));
-          }
-          if (strike) {
-            const wdt = ctx.measureText(text).width;
-            ctx.fillRect(x, y-size/3, wdt, Math.max(2, size/15));
-          }
-          gif.addFrame(ctx, { copy: true, delay: 1000 / fps });
-        }
+  function showResult(url) {
+    document.getElementById('creator').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('gif').src = url;
+    document.getElementById('gifLink').href = url;
+  }
 
-        // Render and redirect
-        gif.on('finished', function(blob) {
-          const reader = new FileReader();
-          reader.onload = () => { window.location = reader.result; };
-          reader.readAsDataURL(blob);
-        });
-        gif.render();
-      }
-    })();
-  </script></body>
+  const params = getParams();
+
+  if (hasAllParams(params)) {
+    generateGIF(params, url => {
+      location.href = url;
+    });
+  } else {
+    document.getElementById('generate').addEventListener('click', () => {
+      const t = document.getElementById('text').value;
+      const f = document.getElementById('font').value;
+      const s = document.getElementById('size').value;
+      const w = document.getElementById('weight').value;
+      const c = document.getElementById('cycle').value;
+      generateGIF({t, f, s, w, c}, url => {
+        showResult(url);
+        history.replaceState(null, '', `?t=${encodeURIComponent(t)}&f=${encodeURIComponent(f)}&s=${s}&w=${encodeURIComponent(w)}&c=${c}`);
+      });
+    });
+  }
+</script>
+
+</body>
 </html>
