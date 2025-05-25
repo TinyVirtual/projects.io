@@ -2,7 +2,6 @@
 
 [Avatar Test](https://tinyvirtual.github.io/projects.io/EduSync%20Avatar%20Creation/index.html)<br>
 [More Soon](https://tinyvirtual.github.io/projects.io/soon.html)<br>
-[![Rainbow Generator(WIP)](https://tinyvirtual.github.io/projects.io/rainbow.html?t=Rainbow%20Generator&s=24&f=Comic%20Sans%20MS%2C%20Patrick%20Hand%2C%20cursive&w=400&c=1)](https://tinyvirtual.github.io/projects.io/rainbow.html)
 
 # Bookmarklets
 
