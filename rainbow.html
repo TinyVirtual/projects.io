@@ -1,158 +1,140 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Rainbow Text GIF Generator</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Montserrat&family=Nunito&family=Oswald&family=Lobster&family=Permanent+Marker&family=Patrick+Hand&family=Playfair+Display&display=swap" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
-<style>
-  body { font-family: sans-serif; text-align: center; margin: 20px; }
-  canvas { display: none; }
-  .controls { margin: 15px 0; }
-  input, select, button { margin: 5px; padding: 5px; }
-  #output a, #output img { display: block; margin: 10px auto; max-width: 90vw; }
-</style>
-<script type="application/json" id="font-styles">
-{
-  "fonts": [
-    "Arial",
-    "Comic Sans MS, Patrick Hand, cursive",
-    "Playfair Display, Times New Roman, monospace",
-    "Nunito, sans-serif",
-    "Montserrat, sans-serif",
-    "Oswald, sans-serif",
-    "Lobster, cursive",
-    "Permanent Marker, cursive",
-    "Pixelify Sans, monospace"
-  ]
-}
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rainbow Text Generator</title>
+  <style>
+    body {
+      background: transparent;
+      text-align: center;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .hidden { display: none; }
+    .controls { margin-top: 20px; }
+    .controls input, .controls select { margin: 5px; }
+    #output img { max-width: 100%; height: auto; }
+  </style>
+  <!-- GIF.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
 </head>
 <body>
-<h1>Rainbow Text GIF Generator</h1>
-<div id="ui">
-  <div class="controls">
-    <input type="text" id="text-input" placeholder="Your Text" size="30" />
-    <button id="generate-btn">Generate GIF</button>
-  </div>
-  <details>
-    <summary>Additional Settings</summary>
-    <div class="controls">
-      <label>Font Size: <input type="number" id="size-input" value="16" min="8" /></label>
-      <label>Font Weight: <input type="number" id="weight-input" value="400" min="100" step="100" /></label>
-      <label>Font Style:
-        <select id="style-input">
-          <option value="0">Arial</option>
-          <option value="1">Comic Sans MS, Patrick Hand, cursive</option>
-          <option value="2">Playfair Display, Times New Roman, monospace</option>
-          <option value="3">Nunito</option>
-          <option value="4">Montserrat</option>
-          <option value="5">Oswald</option>
-          <option value="6">Lobster</option>
-          <option value="7">Permanent Marker</option>
-          <option value="8">Pixelify Sans</option>
+  <center>
+    <!-- Creator UI -->
+    <div id="creator">
+      <h1>Rainbow Text GIF Generator</h1>
+      <p>Useful for Markdown embedding</p>
+      <div class="controls">
+        <input type="text" id="text-input" placeholder="Your Text" value="Hello World!" />
+        <input type="number" id="size-input" placeholder="Font Size" value="24" />
+        <select id="font-select">
+          <option value="Arial">Arial</option>
+          <option value="Comic Sans MS, Patrick Hand, cursive">Comic Sans MS</option>
+          <option value="Playfair Display, Times New Roman, serif">Playfair Display</option>
+          <option value="Nunito, sans-serif">Nunito</option>
+          <option value="Montserrat, sans-serif">Montserrat</option>
+          <option value="Oswald, sans-serif">Oswald</option>
+          <option value="Lobster, cursive">Lobster</option>
+          <option value="Permanent Marker, cursive">Permanent Marker</option>
+          <option value="Pixelify Sans, sans-serif">Pixelify Sans</option>
         </select>
-      </label>
-      <fieldset>
-        <legend>Text Format</legend>
-        <label><input type="checkbox" id="bold-input" /> Bold</label>
-        <label><input type="checkbox" id="italic-input" /> Italic</label>
-        <label><input type="checkbox" id="underline-input" /> Underline</label>
-        <label><input type="checkbox" id="strike-input" /> Strikethrough</label>
-      </fieldset>
-    </div>
-  </details>
+        <input type="number" id="weight-input" placeholder="Font Weight" value="400" />
+        <fieldset>
+          <legend>Text Formatting</legend>
+          <label><input type="checkbox" id="bold-checkbox" /> Bold</label>
+          <label><input type="checkbox" id="italic-checkbox" /> Italic</label>
+          <label><input type="checkbox" id="underline-checkbox" /> Underline</label>
+          <label><input type="checkbox" id="strike-checkbox" /> Strikethrough</label>
+        </fieldset>
+        <button id="generateBtn">Generate</button>
+      </div>
+    </div><!-- Output / Download UI -->
+<div id="output" class="hidden">
+  <h2 id="output-text"></h2>
+  <p><a id="markdown-link" href="#" target="_blank"></a></p>
+  <button id="copy-md">Copy Markdown</button>
+  <button id="copy-link">Copy Link</button>
+  <div><img id="preview" alt="GIF Preview"></div>
+  <button id="newBtn">Generate Other Image</button>
 </div>
-<canvas id="canvas"></canvas>
-<div id="output"></div>
-<script>
-  // Load fonts
-  const fontData = JSON.parse(document.getElementById('font-styles').textContent);
-  const fonts = fontData.fonts;
-  function getParams() {
-    const url = new URL(window.location.href);
-    return {
-      t: url.searchParams.get('t') || '',
-      s: parseFloat(url.searchParams.get('s')) || 16,
-      w: parseInt(url.searchParams.get('w')) || 400,
-      f: parseInt(url.searchParams.get('f')) || 0,
-      c: parseInt(url.searchParams.get('c')) || 0
-    };
-  }
-  function applyTextProps(ctx, params) {
-    const style = (params.c & 2) ? 'italic ' : '';
-    const weight = (params.c & 1) ? 'bold ' : (params.w || 400) + ' ';
-    const size = params.s || 16;
-    const family = fonts[params.f] || fonts[0];
-    ctx.font = `${style}${weight}${size}px ${family}`;
-    ctx.textBaseline = 'top';
-  }
-  function drawFrame(ctx, params, phase) {
-    const txt = params.t;
-    const { width } = ctx.canvas;
-    const grad = ctx.createLinearGradient(0, 0, width, 0);
-    ['red','orange','yellow','green','blue','indigo','violet'].forEach((c,i) => {
-      grad.addColorStop(((i/6)+phase)%1, c);
-    });
-    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
-    ctx.fillStyle = grad;
-    ctx.fillText(txt,5,5);
-    const m = ctx.measureText(txt);
-    if (params.c & 4) { ctx.fillRect(5,5+m.actualBoundingBoxAscent+2, m.width,2); }
-    if (params.c & 8) { ctx.fillRect(5,5+m.actualBoundingBoxAscent/2, m.width,2); }
-  }
-  function generateGIF(params) {
-    const tmp = document.createElement('canvas');
-    const tctx = tmp.getContext('2d', { willReadFrequently: true });
-    applyTextProps(tctx, params);
-    const m = tctx.measureText(params.t);
-    const pad = 5;
-    tmp.width = Math.ceil(m.width)+pad*2;
-    tmp.height = Math.ceil(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent)+pad*2;
-    const workerPath = '/external/gif.worker.js';
-    const gif = new GIF({ workers:2, quality:10, width:tmp.width, height:tmp.height, workerScript: workerPath });
-    for (let i=0;i<20;i++){
-      drawFrame(tmp.getContext('2d', { willReadFrequently: true }), params, i/20);
-      gif.addFrame(tmp, { delay:100, copy:true });
-    }
-    gif.on('finished', blob => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result;
-        showResult(params.t, dataUrl);
-      };
-      reader.readAsDataURL(blob);
-    });
-    gif.render();
-  }
-  function showResult(text, url) {
-    document.getElementById('ui').style.display='none';
-    const out = document.getElementById('output');
-    // Markdown with data URI
-    out.innerHTML = `
-      <p>Markdown:</p>
-      <textarea rows="3" cols="50">![${text}](${url})</textarea>
-      <button onclick="navigator.clipboard.writeText('![${text}](${url})')">Copy Markdown</button>
-      <br><button onclick="window.open('${url}','_blank')">Open GIF</button>
-      <img src="${url}" alt="${text}" />
-      <button onclick="location.reload()">Generate Other</button>
-    `;
-  }
-  document.getElementById('generate-btn').addEventListener('click', ()=>{
-    const p = getParams();
-    p.t = document.getElementById('text-input').value || p.t || 'Hello World!';
-    p.s = parseFloat(document.getElementById('size-input').value)||p.s;
-    p.w = parseInt(document.getElementById('weight-input').value)||p.w;
-    p.f = parseInt(document.getElementById('style-input').value);
-    p.c = (document.getElementById('bold-input').checked?1:0)|(document.getElementById('italic-input').checked?2:0)|
-          (document.getElementById('underline-input').checked?4:0)|(document.getElementById('strike-input').checked?8:0);
-    generateGIF(p);
-  });
-  // Auto-run if ?t= and no UI needed
-  const params = getParams();
-  if (params.t) { document.getElementById('text-input').value = params.t; }
-</script>
-</body>
+
+  </center><canvas id="canvas" class="hidden"></canvas>
+
+  <script>
+    (async function() {
+      const params = new URLSearchParams(window.location.search);
+      const t = params.get('t');
+      if (t) {
+        // Direct generation mode
+        const s = parseFloat(params.get('s')) || 24;
+        const f = params.get('f') || 'Arial';
+        const w = parseInt(params.get('w')) || 400;
+        const bold = params.get('c') & 1;
+        const italic = params.get('c') & 2;
+        const underline = params.get('c') & 4;
+        const strike = params.get('c') & 8;
+        await generateAndRedirectGif(t, s, f, w, bold, italic, underline, strike);
+      } else {
+        // Show creator UI
+        document.getElementById('generateBtn').onclick = () => {
+          const txt = encodeURIComponent(document.getElementById('text-input').value);
+          const sz = document.getElementById('size-input').value;
+          const ft = encodeURIComponent(document.getElementById('font-select').value);
+          const wt = document.getElementById('weight-input').value;
+          let c = 0;
+          if (document.getElementById('bold-checkbox').checked) c |= 1;
+          if (document.getElementById('italic-checkbox').checked) c |= 2;
+          if (document.getElementById('underline-checkbox').checked) c |= 4;
+          if (document.getElementById('strike-checkbox').checked) c |= 8;
+          const link = `${location.pathname}?t=${txt}&s=${sz}&f=${ft}&w=${wt}&c=${c}`;
+          location.href = link;
+        };
+      }
+
+      async function generateAndRedirectGif(text, size, fontFamily, fontWeight, bold, italic, underline, strike) {
+        // Prepare canvas
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.font = `${italic?'italic ':''}${bold?'bold ':''}${fontWeight}px ${fontFamily}`;
+        const metrics = ctx.measureText(text);
+        canvas.width = Math.ceil(metrics.width) + 20;
+        canvas.height = Math.ceil(size * 1.5) + 20;
+        const x = 10;
+        const y = canvas.height / 2 + size/3;
+
+        // GIF setup
+        const fps = 20;
+        const duration = 3000; // ms
+        const frameCount = Math.ceil(fps * duration / 1000);
+        const gif = new GIF({ workers: 2, quality: 10, width: canvas.width, height: canvas.height, transparent: null });
+
+        // Draw frames
+        for (let i = 0; i < frameCount; i++) {
+          const hue = Math.round((i / frameCount) * 360);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // background transparent
+          ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+          ctx.fillText(text, x, y);
+          if (underline) {
+            const wdt = ctx.measureText(text).width;
+            ctx.fillRect(x, y+5, wdt, Math.max(2, size/15));
+          }
+          if (strike) {
+            const wdt = ctx.measureText(text).width;
+            ctx.fillRect(x, y-size/3, wdt, Math.max(2, size/15));
+          }
+          gif.addFrame(ctx, { copy: true, delay: 1000 / fps });
+        }
+
+        // Render and redirect
+        gif.on('finished', function(blob) {
+          const reader = new FileReader();
+          reader.onload = () => { window.location = reader.result; };
+          reader.readAsDataURL(blob);
+        });
+        gif.render();
+      }
+    })();
+  </script></body>
 </html>
