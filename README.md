@@ -22,6 +22,41 @@ javascript:(function(){  if(window.customModalInjected)return;window.customModal
   <img src="https://github.com/TinyVirtual/projects.io/blob/main/images/background_lock.png" width="300">
 </details>
 
+# Windows Optimization
+## Registry Shortcuts
+```powershell
+$envVars = @{
+    "MINECRAFT" = "%USERPROFILE%\AppData\Roaming\.minecraft"
+    "DESKTOP"   = "%USERPROFILE%\Desktop"
+    "DOWNLOADS" = "%USERPROFILE%\Downloads"
+    "RBX"       = "%USERPROFILE%\AppData\Local\Roblox"
+    "DOCS"      = "%USERPROFILE%\Documents"
+    "IMGS"      = "%USERPROFILE%\Images"
+    "VIDS"      = "%USERPROFILE%\Videos"
+    "ME"        = "%USERPROFILE%"
+}
 
+$regPath = "HKCU:\Environment"
+
+foreach ($name in $envVars.Keys) {
+    Set-ItemProperty -Path $regPath -Name $name -Value $envVars[$name] -Type ExpandString
+}
+
+$signature = @"
+[DllImport("user32.dll", SetLastError = true)]
+public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam,
+    uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+"@
+Add-Type -MemberDefinition $signature -Name NativeMethods -Namespace Win32
+
+$HWND_BROADCAST = [intptr]0xffff
+$WM_SETTINGCHANGE = 0x1A
+$SMTO_ABORTIFHUNG = 0x2
+[UIntPtr]$result = [UIntPtr]::Zero
+
+[Win32.NativeMethods]::SendMessageTimeout($HWND_BROADCAST, $WM_SETTINGCHANGE, [uintptr]::Zero, "Environment", $SMTO_ABORTIFHUNG, 5000, [ref]$result)
+
+Write-Host "Environment variables set successfully."
+```
 
 <br><br><br><br><br> Check my [profile](https://github.com/TinyVirtual/)
