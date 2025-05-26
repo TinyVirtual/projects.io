@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Rainbow Text</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Montserrat:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Oswald:wght@200..700&family=Patrick+Hand&family=Permanent+Marker&family=Pixelify+Sans:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: transparent; /* Ensure transparency */
+            text-align: center;
+            margin: 0;
+        }
+
+        @keyframes rainbow {
+            0% {color: red;}
+            16% {color: orange;}
+            33% {color: yellow;}
+            50% {color: green;}
+            66% {color: blue;}
+            83% {color: indigo;}
+            100% {color: violet;}
+        }
+
+        .rainbow-text {
+            font-size: 30px;
+            font-weight: bold;
+            animation: rainbow 3s infinite;
+        }
+    </style>
+</head>
+<body>
+    <p id="dynamic-text" class="rainbow-text">...</p>
+
+    <script>
+        // Function to get URL parameters
+        function getQueryParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+
+
+
+        const textParam = getQueryParam("t");
+        const fontParam = getQueryParam("f");
+        const configParam = getQueryParam("c");
+        const sizeParam = getQueryParam("s");
+	const fontArray = ["system-ui","Patrick Hand","Playfair Display","Lobster","Montserrat","Nunito","Oswald","Permanent Marker","Pixelify Sans"]
+
+
+        if (textParam) {
+            document.getElementById("dynamic-text").style.fontWeight = "400";
+            document.getElementById("dynamic-text").style.fontFamily  = "system-ui";
+            document.getElementById("dynamic-text").innerText = textParam;
+        } else {
+            console.warn("No text provided, to change text, enter the text here --> ...rainbow.html?t=HERE")
+        }
+
+        if (fontParam) {
+            document.getElementById("dynamic-text").style.fontFamily  = fontArray[Number(fontParam)] || "system-ui";
+        }
+
+        if (sizeParam) {
+            document.getElementById("dynamic-text").style.fontSize  = sizeParam + "px" || "16px";
+        }
+	
+        if (configParam) {
+            switch(configParam){
+            case "1":
+                document.getElementById("dynamic-text").style.fontWeight = "700";
+                break;
+            case "2":
+                document.getElementById("dynamic-text").style.fontStyle = 'italic'
+                break;
+            case "3":
+                document.getElementById("dynamic-text").style.fontStyle = 'italic'
+                document.getElementById("dynamic-text").style.fontWeight = "700";
+                break;
+            case "4":
+                document.getElementById("dynamic-text").style.textDecoration = 'underline'
+                break;
+            case "5":
+                document.getElementById("dynamic-text").style.textDecoration = 'underline'
+                document.getElementById("dynamic-text").style.fontWeight = "700";
+                break;
+            case "6":
+                document.getElementById("dynamic-text").style.textDecoration = 'underline'
+                document.getElementById("dynamic-text").style.fontStyle = 'italic'
+                break;
+            case "7":
+                document.getElementById("dynamic-text").style.textDecoration = 'underline'
+                document.getElementById("dynamic-text").style.fontStyle = 'italic'
+                document.getElementById("dynamic-text").style.fontWeight = "700";
+                break;
+            default:
+                console.log(`unknown param: ${configParam}.`);
+            }
+        }
+	
+
+        // Check if inside an iframe
+        function isInIframe() {
+            console.log("framed:",window.self !== window.top)
+            return window.self !== window.top;
+        }
+
+        // Adjust iframe size dynamically
+        function adjustIframeSize() {
+            if (isInIframe()) {
+                document.body.style.overflow = "hidden"; // Hide scrollbars
+
+                let contentHeight = document.documentElement.scrollHeight;
+                let contentWidth = document.documentElement.scrollWidth;
+
+                // Send size to parent iframe
+                window.parent.postMessage({ height: contentHeight, width: contentWidth }, "*");
+            }
+        }
+
+        window.onload = adjustIframeSize;
+      //  oh you're a programmer? i bet, why u using ai codes
+      //  cuz im lazy lol
+      //  - Tiny, Brazil, May 24 2025
+    </script>
+</body>
+</html>
