@@ -49,6 +49,7 @@ Eu vou ~~cagar na sua casa~~ te abraçar
 
 # A fazer
 - [x] Markdown com todos os formatos
+- [ ] baixar a [extensão](https://markdown-here.com/get.html)
 - [ ] Parar de procrastinar
 - [ ] tirar as rouaps do varal
 
