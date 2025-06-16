@@ -18,8 +18,8 @@ javascript:(function(){  if(window.customModalInjected)return;window.customModal
 # Wallpapers
 <details>
   <summary>Show</summary>
-  <img src="https://github.com/TinyVirtual/projects.io/blob/main/images/background_home.png" width="300">
-  <img src="https://github.com/TinyVirtual/projects.io/blob/main/images/background_lock.png" width="300">
+  <img src="https://raw.githubusercontent.com/TinyVirtual/projects.io/refs/heads/main/images/background_home.png" width="300">
+  <img src="https://raw.githubusercontent.com/TinyVirtual/projects.io/refs/heads/main/images/background_lock.png" width="300">
 </details>
 
 # Windows Optimization
