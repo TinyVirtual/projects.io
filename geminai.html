@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+  <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Tiny Ai</title>
+      <meta name="og:title" content="my gemnai">
+      <script type="module">
+         import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
+         window.marked = marked;
+      </script>
+      <style>
+  body {
+    background: #101026;
+    color: #fff;
+    border-radius: 10px;
+    margin: 0;
+    font-family: sans-serif;
+  }
+
+  h1 {
+    margin-top: 20px;
+  }
+
+  .container {
+    background: #ffffff10;
+    width: 90%;
+    height: 70vh;
+    border-radius: 20px;
+    padding: 20px;
+    overflow: overlay;
+    text-align: left;
+  }
+
+  .center-title {
+    text-align: center;
+  }
+
+  .prompt {
+    color: #888;
+  }
+
+  .response {
+    color: #aaf;
+  }
+
+  #box {
+    width: 375px;
+    height: 51px;
+  }
+
+  #submit {
+    vertical-align: top;
+    margin: 10px;
+    width: 96px;
+    border: none;
+    background: #11d;
+    border-radius: 10px;
+    color: #fff;
+    padding: 10px;
+    cursor: pointer;
+  }
+
+  footer {
+    position: sticky;
+    top: 90vh;
+    margin-top: 40px;
+  }
+
+  textarea {
+    background: #000;
+    border: 2px #fff solid;
+    border-radius: 1vh;
+    color: white;
+    font-family: cursive;
+  }
+
+  #clear {
+    position: absolute;
+    left: 3.8%;
+    top: 20px;
+    margin: 10px;
+    border: none;
+    background: #d11;
+    border-radius: 10px;
+    color: #fff;
+    padding: 10px;
+    cursor: pointer;
+  }
+
+  .divider {
+    background: #ffffff10;
+    width: 90%;
+    height: 3px;
+    margin-top: 20px;
+  }
+
+  a {
+    color: #aaf;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  center {
+    text-align: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+  }
+      </style>
+    </head>
+    <body>
+      <center>
+        <h1>Tiny Ai</h1><br>
+        <div class="container">
+          <h3 class="center-title">History:</h3>
+          <ul id="history"></ul>
+        </div>
+        <br><br>
+        <textarea id="box" type="text" placeholder="What is the..." ></textarea>
+        <button id="submit">Submit</button>
+	<br><br><br>
+      </center>
+      <footer>
+        <center>
+        <button id="clear">Clear Chat</button>
+          <div class="divider"></div>
+          <p>Made by </p><a href="https://github.com/TinyVirtual/">TinyVirtual</a>
+        </center>
+      </footer>
+      <script>
+  let chatHistory = [];
+
+  function extractAIText(data) {
+    if (!data) return '';
+    if (typeof data === 'string') return data;
+    // common shapes
+    return data.response ?? data.answer ?? data.text ?? data.result ?? JSON.stringify(data);
+  }
+
+  async function handleSubmit(e) {
+    e?.preventDefault?.();
+
+    const box = document.getElementById('box');
+    const submitBtn = document.getElementById('submit');
+    const historyUl = document.getElementById('history');
+
+    const stored_prompt = (box.value || '').trim();
+    if (!stored_prompt) return;
+
+    // create and append prompt li
+    const promptLi = document.createElement('li');
+    promptLi.className = 'prompt';
+    promptLi.textContent = 'User: ' + stored_prompt;
+    historyUl.appendChild(promptLi);
+
+    // create response li with a placeholder
+    const responseLi = document.createElement('li');
+    responseLi.className = 'response';
+    responseLi.textContent = 'Generating...';
+    historyUl.appendChild(responseLi);
+
+    // clear input and disable button while waiting
+    box.value = '';
+    submitBtn.disabled = true;
+
+    try {
+      const res = await fetch('https://tiny-ai-requester.onrender.com/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: stored_prompt,
+          history: chatHistory, // array
+          instructions: ""
+        })
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(()=>null);
+        throw new Error('Network response was not ok: ' + res.status + ' ' + (text || res.statusText));
+      }
+
+      const data = await res.text();
+      const ai_response = "**AI:** "+extractAIText(data);
+
+
+      // update the UI
+      responseLi.innerHTML = window.marked(ai_response) || ai_response;
+
+      // push user and model entries into the chatHistory array
+      chatHistory.push({
+        role: "user",
+        parts: [{ text: stored_prompt }]
+      });
+
+      chatHistory.push({
+        role: "model",
+        parts: [{ text: ai_response }]
+      });
+
+      // trim history: remove two objects from beginning until length <= 50
+      while (chatHistory.length > 50) {
+        chatHistory.splice(0, 2);
+      }
+
+    } catch (err) {
+      console.error('Request error:', err);
+      responseLi.textContent = 'Error: could not get response';
+    } finally {
+      submitBtn.disabled = false;
+      // scroll to bottom
+      historyUl.scrollTop = historyUl.scrollHeight;
+    }
+  }
+
+  document.getElementById('submit').addEventListener('click', handleSubmit);
+      </script>
+    </body>
+  </html>
